@@ -1,0 +1,62 @@
+# ============================================================
+# APPLICATION
+# ============================================================
+spring:
+  application:
+    name: openrecords-api
+
+  # ============================================================
+  # DATASOURCE - PostgreSQL
+  # ============================================================
+  datasource:
+    url: jdbc:postgresql://localhost:5432/openrecords
+    username: openrecords
+    password: openrecords_dev_password
+    driver-class-name: org.postgresql.Driver
+
+  # ============================================================
+  # JPA / HIBERNATE
+  # ============================================================
+  jpa:
+    hibernate:
+      # 'validate' = Hibernate verifies schema matches entities but doesn't modify.
+      # Flyway owns schema changes; Hibernate only validates.
+      ddl-auto: validate
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+    show-sql: false
+    open-in-view: false
+
+  # ============================================================
+  # FLYWAY
+  # ============================================================
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: true
+
+  # ============================================================
+  # SECURITY (temporary - will swap for JWT in auth phase)
+  # ============================================================
+  security:
+    user:
+      name: admin
+      password: admin
+
+# ============================================================
+# SERVER
+# ============================================================
+server:
+  port: 8080
+
+# ============================================================
+# LOGGING
+# ============================================================
+logging:
+  level:
+    org.springframework.web: INFO
+    com.openrecords: DEBUG
+    org.hibernate.SQL: DEBUG
+    org.hibernate.orm.jdbc.bind: TRACE
