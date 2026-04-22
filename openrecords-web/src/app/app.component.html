@@ -1,0 +1,34 @@
+<main class="container">
+  <header>
+    <h1>OpenRecords</h1>
+    <p class="subtitle">FOIA Request Management Portal</p>
+  </header>
+
+  <section class="card" [attr.data-state]="health().kind">
+    <h2>Backend Status</h2>
+
+    @if (health().kind === 'loading') {
+      <p>Checking API…</p>
+    } @else if (health().kind === 'ok') {
+      @let h = health();
+      @if (h.kind === 'ok') {
+        <dl class="status">
+          <dt>Status</dt>
+          <dd>{{ h.data.status }}</dd>
+          <dt>Service</dt>
+          <dd>{{ h.data.service }}</dd>
+          <dt>Timestamp</dt>
+          <dd>{{ h.data.timestamp }}</dd>
+        </dl>
+      }
+    } @else if (health().kind === 'error') {
+      @let h = health();
+      @if (h.kind === 'error') {
+        <p class="error">Unable to reach the API: {{ h.message }}</p>
+        <p class="hint">Is Spring Boot running on <code>localhost:8080</code>?</p>
+      }
+    }
+  </section>
+</main>
+
+<router-outlet />
