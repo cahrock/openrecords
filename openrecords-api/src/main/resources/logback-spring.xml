@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+
+    <!-- ============================================================ -->
+    <!-- Pull Spring Boot's sensible defaults (console appender, etc.) -->
+    <!-- ============================================================ -->
+    <include resource="org/springframework/boot/logging/logback/defaults.xml"/>
+
+    <!-- Dynamic log file location — override with -Dlogging.path=... if needed -->
+    <springProperty scope="context" name="LOG_PATH" source="logging.file.path" defaultValue="./logs"/>
+    <springProperty scope="context" name="LOG_NAME" source="logging.file.name" defaultValue="openrecords-api"/>
+
+    <!-- Bring in the default console appender config -->
+    <include resource="org/springframework/boot/logging/logback/console-appender.xml"/>
+
+    <!-- ============================================================ -->
+    <!-- Rolling file appender: one file per day, keep 30 days        -->
+    <!-- ============================================================ -->
+    <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${LOG_PATH}/${LOG_NAME}.log</file>
+
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <!-- Example archived name:
+                 logs/openrecords-api.2026-04-22.0.log.gz -->
+            <fileNamePattern>${LOG_PATH}/${LOG_NAME}.%d{yyyy-MM-dd}.%i.log.gz</fileNamePattern>
+            <maxFileSize>50MB</maxFileSize>         <!-- roll when file hits 50MB -->
+            <maxHistory>30</maxHistory>             <!-- keep 30 days of logs -->
+            <totalSizeCap>1GB</totalSizeCap>        <!-- total archive never exceeds 1GB -->
+        </rollingPolicy>
+
+        <encoder>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} %-5level [%thread] %logger{36} - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <!-- ============================================================ -->
+    <!-- Environment-specific configuration                            -->
+    <!-- ============================================================ -->
+
+    <!-- Default / dev: verbose logging to both console and file -->
+    <springProfile name="default,dev">
+        <root level="INFO">
+            <appender-ref ref="CONSOLE"/>
+            <appender-ref ref="FILE"/>
+        </root>
+
+        <!-- Your app: DEBUG level for development visibility -->
+        <logger name="com.openrecords" level="DEBUG"/>
+
+        <!-- Hibernate SQL logging (useful during development) -->
+        <logger name="org.hibernate.SQL" level="DEBUG"/>
+        <logger name="org.hibernate.orm.jdbc.bind" level="TRACE"/>
+
+        <!-- Silence noisy libraries -->
+        <logger name="org.apache.tomcat" level="WARN"/>
+        <logger name="org.apache.catalina" level="WARN"/>
+    </springProfile>
+
+    <!-- Production: file-only, less verbose -->
+    <springProfile name="prod">
+        <root level="INFO">
+            <appender-ref ref="FILE"/>
+        </root>
+        <logger name="com.openrecords" level="INFO"/>
+    </springProfile>
+
+</configuration>

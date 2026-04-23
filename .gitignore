@@ -35,3 +35,8 @@ build/
 # Docker volumes (never commit local data)
 postgres_data/
 pgadmin_data/
+
+# Log files
+logs/
+*.log
+*.log.gz
