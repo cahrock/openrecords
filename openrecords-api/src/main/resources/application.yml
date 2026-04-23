@@ -60,3 +60,10 @@ logging:
     com.openrecords: DEBUG
     org.hibernate.SQL: DEBUG
     org.hibernate.orm.jdbc.bind: TRACE
+
+# ============================================================
+# APP-SPECIFIC CONFIG
+# ============================================================
+openrecords:
+  tracking-number:
+    prefix: FOIA
