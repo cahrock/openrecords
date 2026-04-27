@@ -55,6 +55,26 @@ public class GlobalExceptionHandler {
     }
 
     // ============================================================
+    // 422 — Invalid status transition
+    // ============================================================
+    @ExceptionHandler(InvalidStatusTransitionException.class)
+    public ResponseEntity<ProblemDetail> handleInvalidTransition(
+        InvalidStatusTransitionException ex, HttpServletRequest request
+    ) {
+        log.info("Invalid status transition: {} -> {}", ex.getFrom(), ex.getTo());
+
+        ProblemDetail problem = problem(
+            HttpStatus.UNPROCESSABLE_ENTITY,
+            "Invalid status transition",
+            ex.getMessage(),
+            request
+        );
+        problem.setProperty("from", ex.getFrom().toString());
+        problem.setProperty("to", ex.getTo().toString());
+        return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(problem);
+    }
+
+    // ============================================================
     // 400 — Invalid request body (e.g. missing required field)
     // ============================================================
     @ExceptionHandler(MethodArgumentNotValidException.class)

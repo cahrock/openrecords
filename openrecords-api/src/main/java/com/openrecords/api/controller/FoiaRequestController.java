@@ -3,6 +3,7 @@ package com.openrecords.api.controller;
 import com.openrecords.api.dto.CreateFoiaRequestDto;
 import com.openrecords.api.dto.FoiaRequestDto;
 import com.openrecords.api.dto.PageDto;
+import com.openrecords.api.dto.StatusTransitionDto;
 import com.openrecords.api.service.FoiaRequestService;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Pageable;
@@ -10,6 +11,7 @@ import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -93,4 +95,23 @@ public class FoiaRequestController {
     public FoiaRequestDto getByTrackingNumber(@PathVariable String trackingNumber) {
         return service.getRequestByTrackingNumber(trackingNumber);
     }
+
+    /**
+     * Transition a request's workflow status.
+     *
+     * Returns 200 OK with the updated request. Status validation lives in the
+     * service layer; the controller is just HTTP plumbing.
+     *
+     * Examples:
+     *   PATCH /api/v1/requests/abc-123/status
+     *   { "targetStatus": "SUBMITTED", "reason": "Filed by requester" }
+     */
+    @PatchMapping("/{id}/status")
+    public FoiaRequestDto transitionStatus(
+        @PathVariable UUID id,
+        @Valid @RequestBody StatusTransitionDto dto
+    ) {
+        return service.transitionStatus(id, dto.targetStatus(), dto.reason());
+    }
+
 }

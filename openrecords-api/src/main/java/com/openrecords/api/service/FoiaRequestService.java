@@ -7,6 +7,7 @@ import com.openrecords.api.domain.User;
 import com.openrecords.api.dto.CreateFoiaRequestDto;
 import com.openrecords.api.dto.FoiaRequestDto;
 import com.openrecords.api.dto.PageDto;
+import com.openrecords.api.exception.InvalidStatusTransitionException;
 import com.openrecords.api.mapper.FoiaRequestMapper;
 import com.openrecords.api.repository.FoiaRequestRepository;
 import com.openrecords.api.repository.FoiaRequestStatusHistoryRepository;
@@ -130,5 +131,52 @@ public class FoiaRequestService {
             requestRepository.findAll(pageable),
             mapper::toDto
         );
+    }
+
+    /**
+     * Transition a request to a new status.
+     *
+     * Validates the transition against the state machine, updates the entity,
+     * writes an audit row, and returns the updated DTO. All within one transaction.
+     *
+     * @throws NoSuchElementException if the request doesn't exist
+     * @throws InvalidStatusTransitionException if the transition is not allowed
+     */
+    @Transactional
+    public FoiaRequestDto transitionStatus(UUID id, FoiaRequestStatus newStatus, String reason) {
+        FoiaRequest request = requestRepository.findById(id)
+            .orElseThrow(() -> new NoSuchElementException(
+                "FOIA request not found: " + id
+            ));
+
+        FoiaRequestStatus currentStatus = request.getStatus();
+
+        if (!currentStatus.canTransitionTo(newStatus)) {
+            throw new InvalidStatusTransitionException(currentStatus, newStatus);
+        }
+
+        // TODO(Phase 6): replace with authenticated user from SecurityContext
+        User actor = userRepository.findByEmail("testuser@example.com")
+            .orElseThrow(() -> new IllegalStateException("Seeded test user not found"));
+
+        // Apply the change to the entity
+        request.applyStatusChange(newStatus);
+        FoiaRequest saved = requestRepository.save(request);
+
+        // Write audit history
+        FoiaRequestStatusHistory history = new FoiaRequestStatusHistory(
+            saved,
+            currentStatus,
+            newStatus,
+            actor,
+            reason
+        );
+        historyRepository.save(history);
+
+        log.info("Transitioned {} from {} to {} (actor: {}, reason: {})",
+            saved.getTrackingNumber(), currentStatus, newStatus,
+            actor.getEmail(), reason);
+
+        return mapper.toDto(saved);
     }
 }

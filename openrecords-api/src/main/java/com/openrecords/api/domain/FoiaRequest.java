@@ -122,6 +122,40 @@ public class FoiaRequest {
     }
 
     // ==============================
+    // Workflow mutator (used by service layer only)
+    // ==============================
+
+    /**
+     * Apply a status transition AND update the relevant lifecycle timestamps.
+     *
+     * NOTE: This method does NOT validate the transition. The service layer
+     * is responsible for calling FoiaRequestStatus.canTransitionTo() first.
+     * Keeping the entity dumb about workflow rules lets the service own that logic
+     * (and write audit history) atomically.
+     */
+    public void applyStatusChange(FoiaRequestStatus newStatus) {
+        this.status = newStatus;
+
+        OffsetDateTime now = OffsetDateTime.now();
+
+        // Set lifecycle timestamps when entering specific states
+        switch (newStatus) {
+            case SUBMITTED -> {
+                if (this.submittedAt == null) this.submittedAt = now;
+            }
+            case ACKNOWLEDGED -> {
+                if (this.acknowledgedAt == null) this.acknowledgedAt = now;
+            }
+            case CLOSED, REJECTED, DOCUMENTS_RELEASED, NO_RECORDS -> {
+                if (this.closedAt == null) this.closedAt = now;
+            }
+            default -> {
+                // No timestamp side effect for other states
+            }
+        }
+    }
+
+    // ==============================
     // Getters
     // ==============================
     public UUID getId() { return id; }
