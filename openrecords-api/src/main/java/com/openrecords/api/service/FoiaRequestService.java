@@ -179,4 +179,45 @@ public class FoiaRequestService {
 
         return mapper.toDto(saved);
     }
+
+    /**
+     * Assign or unassign a request.
+     *
+     * @param requestId the FOIA request UUID
+     * @param assigneeUserId the staff user ID to assign to, or null to unassign
+     * @return the updated request DTO
+     * @throws NoSuchElementException if request or user doesn't exist
+     * @throws IllegalArgumentException if the target user isn't STAFF or ADMIN
+     */
+    @Transactional
+    public FoiaRequestDto assignRequest(UUID requestId, Long assigneeUserId) {
+        FoiaRequest request = requestRepository.findById(requestId)
+            .orElseThrow(() -> new NoSuchElementException(
+                "FOIA request not found: " + requestId
+            ));
+
+        if (assigneeUserId == null) {
+            request.unassign();
+            FoiaRequest saved = requestRepository.save(request);
+            log.info("Unassigned {}", saved.getTrackingNumber());
+            return mapper.toDto(saved);
+        }
+
+        User staffUser = userRepository.findById(assigneeUserId)
+            .orElseThrow(() -> new NoSuchElementException(
+                "User not found: " + assigneeUserId
+            ));
+
+        if (staffUser.getRole() != User.Role.STAFF && staffUser.getRole() != User.Role.ADMIN) {
+            throw new IllegalArgumentException(
+                "Only STAFF or ADMIN users can be assigned to requests. " +
+                "User " + staffUser.getEmail() + " has role " + staffUser.getRole()
+            );
+        }
+
+        request.assignTo(staffUser);
+        FoiaRequest saved = requestRepository.save(request);
+        log.info("Assigned {} to {}", saved.getTrackingNumber(), staffUser.getEmail());
+        return mapper.toDto(saved);
+    }
 }

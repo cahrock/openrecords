@@ -4,7 +4,7 @@ import com.openrecords.api.domain.FoiaRequest;
 import com.openrecords.api.domain.User;
 import com.openrecords.api.dto.CreateFoiaRequestDto;
 import com.openrecords.api.dto.FoiaRequestDto;
-import com.openrecords.api.dto.RequesterSummaryDto;
+import com.openrecords.api.dto.UserSummaryDto;
 import org.springframework.stereotype.Component;
 
 /**
@@ -51,7 +51,8 @@ public class FoiaRequestMapper {
         return new FoiaRequestDto(
             entity.getId(),
             entity.getTrackingNumber(),
-            toRequesterSummary(entity.getRequester()),
+            toUserSummary(entity.getRequester()),
+            entity.getAssignee() != null ? toUserSummary(entity.getAssignee()) : null,
             entity.getSubject(),
             entity.getDescription(),
             entity.getRecordsRequested(),
@@ -68,15 +69,19 @@ public class FoiaRequestMapper {
         );
     }
 
+    private UserSummaryDto toUserSummary(User user) {
+        return new UserSummaryDto(user.getId(), user.getEmail(), user.getFullName());
+    }
+
     /**
      * Build a minimal user view for embedding in request DTOs.
      * Does NOT expose sensitive fields like password hash.
      */
-    public RequesterSummaryDto toRequesterSummary(User user) {
+    public UserSummaryDto toRequesterSummary(User user) {
         if (user == null) {
             return null;
         }
-        return new RequesterSummaryDto(
+        return new UserSummaryDto(
             user.getId(),
             user.getEmail(),
             user.getFullName()

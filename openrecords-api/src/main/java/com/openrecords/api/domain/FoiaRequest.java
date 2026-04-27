@@ -15,6 +15,8 @@ import jakarta.persistence.Version;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
+import com.openrecords.api.util.BusinessDayCalculator;
+
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
@@ -44,6 +46,10 @@ public class FoiaRequest {
 
     @Column(name = "tracking_number", nullable = false, unique = true, length = 20)
     private String trackingNumber;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "assignee_id")
+    private User assignee;
 
     // --------- Ownership ---------
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
@@ -144,7 +150,15 @@ public class FoiaRequest {
                 if (this.submittedAt == null) this.submittedAt = now;
             }
             case ACKNOWLEDGED -> {
-                if (this.acknowledgedAt == null) this.acknowledgedAt = now;
+                if (this.acknowledgedAt == null) {
+                    this.acknowledgedAt = now;
+                    // Federal FOIA SLA: 20 business days from acknowledgement (5 U.S.C. § 552(a)(6))
+                    if (this.dueDate == null) {
+                        this.dueDate = BusinessDayCalculator.addBusinessDays(
+                            now.toLocalDate(), 20
+                        );
+                    }
+                }
             }
             case CLOSED, REJECTED, DOCUMENTS_RELEASED, NO_RECORDS -> {
                 if (this.closedAt == null) this.closedAt = now;
@@ -153,6 +167,25 @@ public class FoiaRequest {
                 // No timestamp side effect for other states
             }
         }
+    }
+
+    // ==============================
+    // Assignment mutators
+    // ==============================
+
+    /**
+     * Assign this request to a staff user.
+     * Caller is responsible for verifying the user has STAFF or ADMIN role.
+     */
+    public void assignTo(User staffUser) {
+        this.assignee = staffUser;
+    }
+
+    /**
+     * Clear the assignment.
+     */
+    public void unassign() {
+        this.assignee = null;
     }
 
     // ==============================
@@ -176,6 +209,7 @@ public class FoiaRequest {
     public OffsetDateTime getCreatedAt() { return createdAt; }
     public OffsetDateTime getUpdatedAt() { return updatedAt; }
     public Integer getVersion() { return version; }
+    public User getAssignee() { return assignee; }
 
     // ==============================
     // Setters for fields the requester can edit before submission
@@ -187,4 +221,5 @@ public class FoiaRequest {
     public void setDateRangeEnd(LocalDate dateRangeEnd) { this.dateRangeEnd = dateRangeEnd; }
     public void setFeeWaiverRequested(boolean feeWaiverRequested) { this.feeWaiverRequested = feeWaiverRequested; }
     public void setMaxFeeWilling(BigDecimal maxFeeWilling) { this.maxFeeWilling = maxFeeWilling; }
+    public void setAssignee(User assignee) { this.assignee = assignee; }
 }

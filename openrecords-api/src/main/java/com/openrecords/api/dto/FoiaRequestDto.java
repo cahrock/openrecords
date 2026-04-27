@@ -20,7 +20,8 @@ import java.util.UUID;
 public record FoiaRequestDto(
     UUID id,
     String trackingNumber,
-    RequesterSummaryDto requester,
+    UserSummaryDto requester,
+    UserSummaryDto assignee,
     String subject,
     String description,
     String recordsRequested,

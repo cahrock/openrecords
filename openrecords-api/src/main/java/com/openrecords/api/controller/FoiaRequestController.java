@@ -1,5 +1,6 @@
 package com.openrecords.api.controller;
 
+import com.openrecords.api.dto.AssignmentDto;
 import com.openrecords.api.dto.CreateFoiaRequestDto;
 import com.openrecords.api.dto.FoiaRequestDto;
 import com.openrecords.api.dto.PageDto;
@@ -114,4 +115,19 @@ public class FoiaRequestController {
         return service.transitionStatus(id, dto.targetStatus(), dto.reason());
     }
 
+    /**
+     * Assign or unassign a request.
+     *
+     * Examples:
+     *   PATCH /api/v1/requests/abc-123/assignment
+     *   { "assigneeUserId": 2 }   → assign to user 2
+     *   { "assigneeUserId": null } → unassign
+     */
+    @PatchMapping("/{id}/assignment")
+    public FoiaRequestDto assignRequest(
+        @PathVariable UUID id,
+        @RequestBody AssignmentDto dto
+    ) {
+        return service.assignRequest(id, dto.assigneeUserId());
+    }
 }

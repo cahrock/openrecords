@@ -177,4 +177,21 @@ public class GlobalExceptionHandler {
         problem.setProperty("timestamp", OffsetDateTime.now().toString());
         return problem;
     }
+
+    // ============================================================
+    // 422 — Business-rule violation (e.g., assigning non-staff user)
+    // ============================================================
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<ProblemDetail> handleBusinessRule(
+        IllegalArgumentException ex, HttpServletRequest request
+    ) {
+        log.info("Business rule violation: {}", ex.getMessage());
+        ProblemDetail problem = problem(
+            HttpStatus.UNPROCESSABLE_ENTITY,
+            "Business rule violation",
+            ex.getMessage(),
+            request
+        );
+        return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(problem);
+    }
 }

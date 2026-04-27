@@ -9,7 +9,7 @@ package com.openrecords.api.dto;
  *   - role (may be sensitive depending on context)
  *   - audit timestamps (not useful in this context)
  */
-public record RequesterSummaryDto(
+public record UserSummaryDto(
     Long id,
     String email,
     String fullName
