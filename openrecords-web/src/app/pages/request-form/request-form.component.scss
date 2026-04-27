@@ -1,0 +1,208 @@
+:host { display: block; }
+
+// ============================================================
+// Page header
+// ============================================================
+.page-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+
+  h1 { margin: 0 0 0.25rem; }
+  p { margin: 0; }
+}
+
+// ============================================================
+// Buttons
+// ============================================================
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.65rem 1.5rem;
+  background: #1e3a8a;
+  color: white !important;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 0.95rem;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.15s;
+
+  &:hover:not(:disabled) { background: #1e40af; text-decoration: none; }
+  &:disabled {
+    background: #93a5d4;
+    cursor: not-allowed;
+  }
+}
+
+.btn-secondary {
+  display: inline-block;
+  padding: 0.55rem 1.1rem;
+  background: white;
+  color: #1e3a8a;
+  border: 1px solid #1e3a8a;
+  font-weight: 600;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.95rem;
+  text-decoration: none;
+  transition: background-color 0.15s;
+
+  &:hover { background: #eff6ff; text-decoration: none; }
+}
+
+// ============================================================
+// Error banner (server-level error)
+// ============================================================
+.error-banner {
+  background: #fef2f2;
+  border-left: 4px solid #ef4444;
+  border-radius: 6px;
+  padding: 1rem 1.25rem;
+  margin-bottom: 1.5rem;
+  color: #991b1b;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+// ============================================================
+// Form layout
+// ============================================================
+.request-form {
+  background: white;
+  border-radius: 12px;
+  padding: 2rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+.field {
+  margin-bottom: 1.5rem;
+
+  label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 0.4rem;
+    color: #374151;
+    font-size: 0.9rem;
+  }
+
+  .required {
+    color: #ef4444;
+    margin-left: 0.15rem;
+  }
+
+  input[type='text'],
+  input[type='number'],
+  input[type='date'],
+  textarea {
+    width: 100%;
+    padding: 0.6rem 0.75rem;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    font-size: 0.95rem;
+    font-family: inherit;
+    color: #111827;
+    background: white;
+    transition: border-color 0.15s, box-shadow 0.15s;
+
+    &:focus {
+      outline: none;
+      border-color: #1e3a8a;
+      box-shadow: 0 0 0 3px rgba(30, 58, 138, 0.1);
+    }
+
+    &.invalid {
+      border-color: #ef4444;
+
+      &:focus {
+        box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.15);
+      }
+    }
+  }
+
+  textarea {
+    resize: vertical;
+    min-height: 100px;
+  }
+}
+
+.field-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+
+  @media (max-width: 600px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.field-error {
+  margin: 0.4rem 0 0;
+  color: #b91c1c;
+  font-size: 0.85rem;
+}
+
+.field-hint {
+  margin: 0.4rem 0 0;
+  color: #6b7280;
+  font-size: 0.85rem;
+}
+
+// ============================================================
+// Fieldset group (Fee Preferences)
+// ============================================================
+.field-group {
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 1.25rem;
+  margin: 0 0 1.5rem;
+
+  legend {
+    font-weight: 600;
+    color: #374151;
+    padding: 0 0.5rem;
+    font-size: 0.95rem;
+  }
+
+  .field { margin-bottom: 1rem; }
+  .field:last-child { margin-bottom: 0; }
+}
+
+.field-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.25rem;
+
+  input[type='checkbox'] {
+    width: 1rem;
+    height: 1rem;
+    cursor: pointer;
+    accent-color: #1e3a8a;
+  }
+
+  label {
+    margin: 0;
+    cursor: pointer;
+    font-weight: 500;
+    color: #1f2937;
+  }
+}
+
+// ============================================================
+// Action row at the bottom
+// ============================================================
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 0.75rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid #e5e7eb;
+}

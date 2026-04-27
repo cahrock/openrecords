@@ -1,34 +1,50 @@
-<main class="container">
-  <header>
-    <h1>OpenRecords</h1>
-    <p class="subtitle">FOIA Request Management Portal</p>
+<div class="app-shell">
+
+  <!-- Top navigation bar -->
+  <header class="nav">
+    <div class="nav-inner">
+      <a routerLink="/" class="brand">
+        <span class="brand-logo">OR</span>
+        <span class="brand-text">
+          <span class="brand-name">OpenRecords</span>
+          <span class="brand-sub">FOIA Portal</span>
+        </span>
+      </a>
+
+      <nav class="nav-links">
+        <a routerLink="/requests" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">
+          My Requests
+        </a>
+        <a routerLink="/requests/new" routerLinkActive="active" class="nav-cta">
+          + New Request
+        </a>
+      </nav>
+    </div>
+
+    <!-- Backend status stripe -->
+    <div class="status-stripe" [attr.data-state]="health().kind">
+      @if (health().kind === 'loading') {
+        <span class="dot"></span>
+        <span>Connecting to API…</span>
+      } @else if (health().kind === 'ok') {
+        @let h = health();
+        @if (h.kind === 'ok') {
+          <span class="dot"></span>
+          <span>API connected · {{ h.data.service }}</span>
+        }
+      } @else if (health().kind === 'error') {
+        @let h = health();
+        @if (h.kind === 'error') {
+          <span class="dot"></span>
+          <span>API unreachable — check Spring Boot on :8080</span>
+        }
+      }
+    </div>
   </header>
 
-  <section class="card" [attr.data-state]="health().kind">
-    <h2>Backend Status</h2>
+  <!-- Main content: whichever page the router matches -->
+  <main class="content">
+    <router-outlet />
+  </main>
 
-    @if (health().kind === 'loading') {
-      <p>Checking API…</p>
-    } @else if (health().kind === 'ok') {
-      @let h = health();
-      @if (h.kind === 'ok') {
-        <dl class="status">
-          <dt>Status</dt>
-          <dd>{{ h.data.status }}</dd>
-          <dt>Service</dt>
-          <dd>{{ h.data.service }}</dd>
-          <dt>Timestamp</dt>
-          <dd>{{ h.data.timestamp }}</dd>
-        </dl>
-      }
-    } @else if (health().kind === 'error') {
-      @let h = health();
-      @if (h.kind === 'error') {
-        <p class="error">Unable to reach the API: {{ h.message }}</p>
-        <p class="hint">Is Spring Boot running on <code>localhost:8080</code>?</p>
-      }
-    }
-  </section>
-</main>
-
-<router-outlet />
+</div>

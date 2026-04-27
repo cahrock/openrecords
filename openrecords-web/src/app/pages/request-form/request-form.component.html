@@ -1,0 +1,158 @@
+<header class="page-header">
+  <div>
+    <h1>New FOIA Request</h1>
+    <p class="muted">File a Freedom of Information Act request with a federal agency.</p>
+  </div>
+  <a routerLink="/requests" class="btn-secondary">← Back to My Requests</a>
+</header>
+
+@if (submitState().kind === 'error') {
+  @let s = submitState();
+  @if (s.kind === 'error') {
+    <div class="error-banner">
+      <strong>Submission failed.</strong>
+      <span>{{ s.message }}</span>
+    </div>
+  }
+}
+
+<form [formGroup]="form" (ngSubmit)="onSubmit()" class="request-form" novalidate>
+
+  <!-- Subject -->
+  <div class="field">
+    <label for="subject">
+      Subject
+      <span class="required">*</span>
+    </label>
+    <input
+      id="subject"
+      type="text"
+      formControlName="subject"
+      maxlength="255"
+      placeholder="Brief title for your request"
+      autocomplete="off"
+      [class.invalid]="isInvalid('subject')"
+    />
+    @if (hasError('subject', 'required')) {
+      <p class="field-error">Subject is required.</p>
+    }
+    @if (hasError('subject', 'maxlength')) {
+      <p class="field-error">Subject must be 255 characters or fewer.</p>
+    }
+    <p class="field-hint">Example: "Records on FY2025 budget allocation"</p>
+  </div>
+
+  <!-- Description -->
+  <div class="field">
+    <label for="description">
+      Description
+      <span class="required">*</span>
+    </label>
+    <textarea
+      id="description"
+      formControlName="description"
+      rows="4"
+      maxlength="10000"
+      placeholder="Why are you making this request?"
+      [class.invalid]="isInvalid('description')"
+    ></textarea>
+    @if (hasError('description', 'required')) {
+      <p class="field-error">Description is required.</p>
+    }
+    @if (hasError('description', 'maxlength')) {
+      <p class="field-error">Description is too long (max 10,000 characters).</p>
+    }
+    <p class="field-hint">Provide context that will help the agency locate the records.</p>
+  </div>
+
+  <!-- Records Requested -->
+  <div class="field">
+    <label for="recordsRequested">
+      Records Requested
+      <span class="required">*</span>
+    </label>
+    <textarea
+      id="recordsRequested"
+      formControlName="recordsRequested"
+      rows="4"
+      maxlength="10000"
+      placeholder="Describe specifically which records you are requesting"
+      [class.invalid]="isInvalid('recordsRequested')"
+    ></textarea>
+    @if (hasError('recordsRequested', 'required')) {
+      <p class="field-error">Records description is required.</p>
+    }
+    @if (hasError('recordsRequested', 'maxlength')) {
+      <p class="field-error">Records description is too long (max 10,000 characters).</p>
+    }
+    <p class="field-hint">Be as specific as possible — this helps the agency find what you need.</p>
+  </div>
+
+  <!-- Date Range -->
+  <div class="field-row">
+    <div class="field">
+      <label for="dateRangeStart">Date range — from</label>
+      <input
+        id="dateRangeStart"
+        type="date"
+        formControlName="dateRangeStart"
+      />
+    </div>
+    <div class="field">
+      <label for="dateRangeEnd">Date range — to</label>
+      <input
+        id="dateRangeEnd"
+        type="date"
+        formControlName="dateRangeEnd"
+      />
+    </div>
+  </div>
+
+  <!-- Fee Preferences -->
+  <fieldset class="field-group">
+    <legend>Fee Preferences</legend>
+
+    <div class="field-checkbox">
+      <input
+        id="feeWaiverRequested"
+        type="checkbox"
+        formControlName="feeWaiverRequested"
+      />
+      <label for="feeWaiverRequested">
+        Request a fee waiver
+      </label>
+    </div>
+    <p class="field-hint">
+      Fee waivers may be granted when disclosure is in the public interest.
+    </p>
+
+    <div class="field">
+      <label for="maxFeeWilling">Maximum fee willing to pay (USD)</label>
+      <input
+        id="maxFeeWilling"
+        type="number"
+        formControlName="maxFeeWilling"
+        min="0"
+        step="0.01"
+        placeholder="0.00"
+        [class.invalid]="isInvalid('maxFeeWilling')"
+      />
+      @if (hasError('maxFeeWilling', 'min')) {
+        <p class="field-error">Amount must be zero or greater.</p>
+      }
+      <p class="field-hint">Optional. Leave blank if not applicable.</p>
+    </div>
+  </fieldset>
+
+  <!-- Actions -->
+  <div class="form-actions">
+    <a routerLink="/requests" class="btn-secondary">Cancel</a>
+    <button type="submit" class="btn-primary" [disabled]="submitState().kind === 'submitting'">
+      @if (submitState().kind === 'submitting') {
+        Submitting…
+      } @else {
+        Submit Request
+      }
+    </button>
+  </div>
+</form>

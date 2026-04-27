@@ -1,0 +1,181 @@
+<header class="page-header">
+  <a routerLink="/requests" class="back-link">← Back to My Requests</a>
+</header>
+
+@if (state().kind === 'loading') {
+  <div class="state-card state-loading">
+    <div class="spinner"></div>
+    <p>Loading request…</p>
+  </div>
+}
+
+@else if (state().kind === 'error') {
+  @let s = state();
+  @if (s.kind === 'error') {
+    <div class="state-card state-error">
+      @if (s.status === 404) {
+        <h2>Request not found</h2>
+        <p>We couldn't find a FOIA request with that ID. It may have been deleted.</p>
+        <a routerLink="/requests" class="btn-primary">Return to My Requests</a>
+      } @else {
+        <h2>Something went wrong</h2>
+        <p>{{ s.message }}</p>
+        <button class="btn-secondary" (click)="ngOnInit()">Try again</button>
+      }
+    </div>
+  }
+}
+
+@else if (state().kind === 'ok') {
+  @let s = state();
+  @if (s.kind === 'ok') {
+    @let req = s.data;
+
+    <!-- ============================================== -->
+    <!--  Hero card — tracking #, status, subject -->
+    <!-- ============================================== -->
+    <section class="hero-card">
+      <div class="hero-top">
+        <span class="tracking">{{ req.trackingNumber }}</span>
+        <span class="status-badge"
+              [attr.data-status]="req.status"
+              [class.terminal]="isTerminal(req.status)">
+          {{ formatStatus(req.status) }}
+        </span>
+      </div>
+      <h1>{{ req.subject }}</h1>
+      <p class="hero-meta">
+        Filed by {{ req.requester.fullName }} on
+        {{ req.createdAt | date: 'longDate' }}
+      </p>
+    </section>
+
+    <div class="detail-grid">
+
+      <!-- ============================================== -->
+      <!--  Main content: description + records requested -->
+      <!-- ============================================== -->
+      <div class="detail-main">
+
+        <section class="detail-section">
+          <h2>Description</h2>
+          <p class="prose">{{ req.description }}</p>
+        </section>
+
+        <section class="detail-section">
+          <h2>Records Requested</h2>
+          <p class="prose">{{ req.recordsRequested }}</p>
+        </section>
+
+        @if (req.dateRangeStart || req.dateRangeEnd) {
+          <section class="detail-section">
+            <h2>Date Range</h2>
+            <p class="prose">
+              @if (req.dateRangeStart && req.dateRangeEnd) {
+                From {{ req.dateRangeStart | date: 'mediumDate' }}
+                to {{ req.dateRangeEnd | date: 'mediumDate' }}
+              } @else if (req.dateRangeStart) {
+                From {{ req.dateRangeStart | date: 'mediumDate' }} onward
+              } @else {
+                Up to {{ req.dateRangeEnd | date: 'mediumDate' }}
+              }
+            </p>
+          </section>
+        }
+
+        @if (req.feeWaiverRequested || req.maxFeeWilling) {
+          <section class="detail-section">
+            <h2>Fee Preferences</h2>
+            <dl class="meta-list">
+              <dt>Fee waiver requested</dt>
+              <dd>{{ req.feeWaiverRequested ? 'Yes' : 'No' }}</dd>
+              @if (req.maxFeeWilling != null) {
+                <dt>Maximum fee willing to pay</dt>
+                <dd>${{ req.maxFeeWilling }}</dd>
+              }
+            </dl>
+          </section>
+        }
+      </div>
+
+      <!-- ============================================== -->
+      <!--  Sidebar: timeline + key dates -->
+      <!-- ============================================== -->
+      <aside class="detail-sidebar">
+
+        <section class="detail-section">
+          <h2>Timeline</h2>
+          <ol class="timeline">
+            <li class="timeline-item active">
+              <div class="timeline-dot"></div>
+              <div class="timeline-content">
+                <strong>Created</strong>
+                <span>{{ req.createdAt | date: 'medium' }}</span>
+              </div>
+            </li>
+            @if (req.submittedAt) {
+              <li class="timeline-item active">
+                <div class="timeline-dot"></div>
+                <div class="timeline-content">
+                  <strong>Submitted</strong>
+                  <span>{{ req.submittedAt | date: 'medium' }}</span>
+                </div>
+              </li>
+            } @else {
+              <li class="timeline-item">
+                <div class="timeline-dot"></div>
+                <div class="timeline-content">
+                  <strong>Submitted</strong>
+                  <span class="muted">Pending</span>
+                </div>
+              </li>
+            }
+            @if (req.acknowledgedAt) {
+              <li class="timeline-item active">
+                <div class="timeline-dot"></div>
+                <div class="timeline-content">
+                  <strong>Acknowledged</strong>
+                  <span>{{ req.acknowledgedAt | date: 'medium' }}</span>
+                </div>
+              </li>
+            } @else {
+              <li class="timeline-item">
+                <div class="timeline-dot"></div>
+                <div class="timeline-content">
+                  <strong>Acknowledged</strong>
+                  <span class="muted">Pending</span>
+                </div>
+              </li>
+            }
+            @if (req.closedAt) {
+              <li class="timeline-item active">
+                <div class="timeline-dot"></div>
+                <div class="timeline-content">
+                  <strong>Closed</strong>
+                  <span>{{ req.closedAt | date: 'medium' }}</span>
+                </div>
+              </li>
+            } @else {
+              <li class="timeline-item">
+                <div class="timeline-dot"></div>
+                <div class="timeline-content">
+                  <strong>Closed</strong>
+                  <span class="muted">Pending</span>
+                </div>
+              </li>
+            }
+          </ol>
+        </section>
+
+        @if (req.dueDate) {
+          <section class="detail-section">
+            <h2>Due Date</h2>
+            <p class="due-date">{{ req.dueDate | date: 'mediumDate' }}</p>
+          </section>
+        }
+
+      </aside>
+    </div>
+
+  }
+}

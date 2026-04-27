@@ -1,0 +1,76 @@
+<header class="page-header">
+  <div>
+    <h1>My Requests</h1>
+    <p class="muted">FOIA requests you've filed with federal agencies.</p>
+  </div>
+  <a routerLink="/requests/new" class="btn-primary">+ New Request</a>
+</header>
+
+@if (state().kind === 'loading') {
+  <div class="state-card state-loading">
+    <div class="spinner"></div>
+    <p>Loading your requests…</p>
+  </div>
+}
+
+@else if (state().kind === 'error') {
+  @let s = state();
+  @if (s.kind === 'error') {
+    <div class="state-card state-error">
+      <h2>Something went wrong</h2>
+      <p>{{ s.message }}</p>
+      <button class="btn-secondary" (click)="loadRequests()">Try again</button>
+    </div>
+  }
+}
+
+@else if (state().kind === 'ok') {
+  @let s = state();
+  @if (s.kind === 'ok') {
+
+    @if (s.data.totalElements === 0) {
+
+      <div class="state-card state-empty">
+        <div class="empty-icon">📄</div>
+        <h2>No requests yet</h2>
+        <p>You haven't filed any FOIA requests. File your first one to get started.</p>
+        <a routerLink="/requests/new" class="btn-primary">+ New Request</a>
+      </div>
+
+    } @else {
+
+      <div class="results-meta">
+        <span>{{ s.data.totalElements }} request{{ s.data.totalElements === 1 ? '' : 's' }}</span>
+      </div>
+
+      <ul class="request-grid">
+        @for (req of s.data.content; track req.id) {
+          <li>
+            <a [routerLink]="['/requests', req.id]" class="request-card">
+              <div class="card-top">
+                <span class="tracking">{{ req.trackingNumber }}</span>
+                <span class="status-badge"
+                      [attr.data-status]="req.status"
+                      [class.terminal]="isTerminal(req.status)">
+                  {{ formatStatus(req.status) }}
+                </span>
+              </div>
+
+              <h3 class="card-subject">{{ req.subject }}</h3>
+
+              <p class="card-desc">{{ req.description }}</p>
+
+              <div class="card-meta">
+                <span>Created {{ req.createdAt | date: 'mediumDate' }}</span>
+                @if (req.dueDate) {
+                  <span>Due {{ req.dueDate | date: 'mediumDate' }}</span>
+                }
+              </div>
+            </a>
+          </li>
+        }
+      </ul>
+
+    }
+  }
+}
