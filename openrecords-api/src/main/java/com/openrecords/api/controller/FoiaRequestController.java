@@ -1,5 +1,6 @@
 package com.openrecords.api.controller;
 
+import com.openrecords.api.domain.FoiaRequestStatus;
 import com.openrecords.api.dto.AssignmentDto;
 import com.openrecords.api.dto.CreateFoiaRequestDto;
 import com.openrecords.api.dto.FoiaRequestDto;
@@ -17,6 +18,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
@@ -68,15 +70,31 @@ public class FoiaRequestController {
     }
 
     /**
-     * List all requests, paginated.
-     * Query params: ?page=0&size=20&sort=createdAt,desc
+     * List FOIA requests with optional filtering for staff queue or requester views.
+     *
+     * Examples:
+     *   GET /api/v1/requests
+     *   GET /api/v1/requests?status=SUBMITTED
+     *   GET /api/v1/requests?status=ACKNOWLEDGED&assigneeId=2
+     *   GET /api/v1/requests?unassignedOnly=true&sort=createdAt,asc
+     *   GET /api/v1/requests?dueWithinDays=5
+     *   GET /api/v1/requests?search=budget
      */
     @GetMapping
     @ResponseStatus(HttpStatus.OK)
     public PageDto<FoiaRequestDto> listRequests(
+        @RequestParam(required = false) FoiaRequestStatus status,
+        @RequestParam(required = false) Long assigneeId,
+        @RequestParam(required = false) Boolean unassignedOnly,
+        @RequestParam(required = false) Long requesterId,
+        @RequestParam(required = false) Integer dueWithinDays,
+        @RequestParam(required = false) String search,
         @PageableDefault(size = 20, sort = "createdAt") Pageable pageable
     ) {
-        return service.listAllRequests(pageable);
+        return service.listRequests(
+            status, assigneeId, unassignedOnly, requesterId,
+            dueWithinDays, search, pageable
+        );
     }
 
     /**

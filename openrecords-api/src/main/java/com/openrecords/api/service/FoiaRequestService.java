@@ -10,11 +10,13 @@ import com.openrecords.api.dto.PageDto;
 import com.openrecords.api.exception.InvalidStatusTransitionException;
 import com.openrecords.api.mapper.FoiaRequestMapper;
 import com.openrecords.api.repository.FoiaRequestRepository;
+import com.openrecords.api.repository.FoiaRequestSpecifications;
 import com.openrecords.api.repository.FoiaRequestStatusHistoryRepository;
 import com.openrecords.api.repository.UserRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -122,13 +124,28 @@ public class FoiaRequestService {
     }
 
     /**
-     * List all requests, paginated. Temporary — in a real app this would be
-     * restricted to staff users. For Phase 4 we expose it unrestricted to make
-     * API testing easy.
+     * List requests with optional filters. All filter params are optional;
+     * pass null to skip a filter dimension.
      */
-    public PageDto<FoiaRequestDto> listAllRequests(Pageable pageable) {
+    public PageDto<FoiaRequestDto> listRequests(
+        FoiaRequestStatus status,
+        Long assigneeId,
+        Boolean unassignedOnly,
+        Long requesterId,
+        Integer dueWithinDays,
+        String search,
+        Pageable pageable
+    ) {
+        Specification<FoiaRequest> spec = Specification
+            .where(FoiaRequestSpecifications.hasStatus(status))
+            .and(FoiaRequestSpecifications.assignedTo(assigneeId))
+            .and(FoiaRequestSpecifications.unassignedOnly(unassignedOnly))
+            .and(FoiaRequestSpecifications.filedBy(requesterId))
+            .and(FoiaRequestSpecifications.dueWithinDays(dueWithinDays))
+            .and(FoiaRequestSpecifications.textSearch(search));
+
         return PageDto.from(
-            requestRepository.findAll(pageable),
+            requestRepository.findAll(spec, pageable),
             mapper::toDto
         );
     }

@@ -4,39 +4,35 @@ services:
     container_name: openrecords-postgres
     restart: unless-stopped
     environment:
-      POSTGRES_DB: openrecords
-      POSTGRES_USER: openrecords
-      POSTGRES_PASSWORD: openrecords_dev_password
+      POSTGRES_DB: ${POSTGRES_DB:-openrecords}
+      POSTGRES_USER: ${POSTGRES_USER:-openrecords}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-openrecords_dev_password}
     ports:
       - "5432:5432"
     volumes:
-      - postgres_data:/var/lib/postgresql/data
-      - ./init-scripts:/docker-entrypoint-initdb.d:ro
+      - openrecords_postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U openrecords -d openrecords"]
-      interval: 10s
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-openrecords} -d ${POSTGRES_DB:-openrecords}"]
+      interval: 5s
       timeout: 5s
-      retries: 5
+      retries: 10
 
   pgadmin:
     image: dpage/pgadmin4:latest
     container_name: openrecords-pgadmin
     restart: unless-stopped
     environment:
-      PGADMIN_DEFAULT_EMAIL: admin@example.com
-      PGADMIN_DEFAULT_PASSWORD: admin
-      PGADMIN_CONFIG_SERVER_MODE: "False"
-      PGADMIN_CONFIG_MASTER_PASSWORD_REQUIRED: "False"
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL:-admin@example.com}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD:-admin}
+      PGADMIN_CONFIG_SERVER_MODE: 'False'
     ports:
       - "5050:80"
     depends_on:
       postgres:
         condition: service_healthy
-    volumes:
-      - pgadmin_data:/var/lib/pgadmin
 
 volumes:
-  postgres_data:
+  openrecords_postgres_data:
     name: openrecords_postgres_data
   pgadmin_data:
     name: openrecords_pgadmin_data

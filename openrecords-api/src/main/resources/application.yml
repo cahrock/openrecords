@@ -9,9 +9,9 @@ spring:
   # DATASOURCE - PostgreSQL
   # ============================================================
   datasource:
-    url: jdbc:postgresql://localhost:5432/openrecords
-    username: openrecords
-    password: openrecords_dev_password
+    url: ${OPENRECORDS_DB_URL:jdbc:postgresql://localhost:5432/openrecords}
+    username: ${OPENRECORDS_DB_USER:openrecords}
+    password: ${OPENRECORDS_DB_PASSWORD:openrecords_dev_password}
     driver-class-name: org.postgresql.Driver
 
   # ============================================================
@@ -42,8 +42,8 @@ spring:
   # ============================================================
   security:
     user:
-      name: admin
-      password: admin
+      name: ${OPENRECORDS_ADMIN_USER:admin}
+      password: ${OPENRECORDS_ADMIN_PASSWORD:admin}
 
 # ============================================================
 # SERVER

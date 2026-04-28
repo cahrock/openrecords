@@ -6,6 +6,7 @@ import com.openrecords.api.domain.User;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
@@ -19,7 +20,9 @@ import java.util.UUID;
  *   ?page=0&size=20&sort=createdAt,desc
  */
 @Repository
-public interface FoiaRequestRepository extends JpaRepository<FoiaRequest, UUID> {
+public interface FoiaRequestRepository
+    extends JpaRepository<FoiaRequest, UUID>,
+            JpaSpecificationExecutor<FoiaRequest> {
 
     /**
      * Look up a request by its human-readable tracking number
