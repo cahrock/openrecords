@@ -1,6 +1,8 @@
 import { Component, inject, OnInit, signal } from '@angular/core';
 import { RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
 import { ApiService, HealthResponse } from './services/api.service';
+import { PersonaSwitcherComponent } from './shared/persona-switcher/persona-switcher.component';
+
 
 type HealthState =
   | { kind: 'loading' }
@@ -10,7 +12,7 @@ type HealthState =
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [RouterOutlet, RouterLink, RouterLinkActive],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, PersonaSwitcherComponent],
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss',
 })
