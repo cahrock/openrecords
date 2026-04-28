@@ -8,11 +8,14 @@ import com.openrecords.api.dto.CreateFoiaRequestDto;
 import com.openrecords.api.dto.FoiaRequestDto;
 import com.openrecords.api.dto.PageDto;
 import com.openrecords.api.exception.InvalidStatusTransitionException;
+import com.openrecords.api.exception.UnauthenticatedException;
 import com.openrecords.api.mapper.FoiaRequestMapper;
 import com.openrecords.api.repository.FoiaRequestRepository;
 import com.openrecords.api.repository.FoiaRequestSpecifications;
 import com.openrecords.api.repository.FoiaRequestStatusHistoryRepository;
 import com.openrecords.api.repository.UserRepository;
+import com.openrecords.api.security.CurrentUser;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Pageable;
@@ -46,19 +49,36 @@ public class FoiaRequestService {
     private final UserRepository userRepository;
     private final FoiaRequestMapper mapper;
     private final TrackingNumberService trackingNumberService;
+    private final CurrentUser currentUser;
 
     public FoiaRequestService(
         FoiaRequestRepository requestRepository,
         FoiaRequestStatusHistoryRepository historyRepository,
         UserRepository userRepository,
         FoiaRequestMapper mapper,
-        TrackingNumberService trackingNumberService
+        TrackingNumberService trackingNumberService,
+        CurrentUser currentUser
     ) {
         this.requestRepository = requestRepository;
         this.historyRepository = historyRepository;
         this.userRepository = userRepository;
         this.mapper = mapper;
         this.trackingNumberService = trackingNumberService;
+        this.currentUser = currentUser;
+    }
+
+    /**
+     * Get the authenticated user, or throw if anonymous.
+     * Used by methods that require a logged-in actor (creates, transitions, assignments).
+     */
+    private User requireCurrentUser() {
+        if (!currentUser.isAuthenticated()) {
+            throw new UnauthenticatedException(
+                "This action requires authentication. " +
+                "Set the X-User-Email header (mock auth — Phase 6 replaces with JWT)."
+            );
+        }
+        return currentUser.get();
     }
 
     /**
@@ -73,11 +93,7 @@ public class FoiaRequestService {
      */
     @Transactional  // method-level override: this one WRITES
     public FoiaRequestDto createRequest(CreateFoiaRequestDto dto) {
-        // TODO(Phase 6): replace with authenticated user from SecurityContext
-        User requester = userRepository.findByEmail("testuser@example.com")
-            .orElseThrow(() -> new IllegalStateException(
-                "Seeded test user not found. Migration V3 may not have run."
-            ));
+        User requester = requireCurrentUser();
 
         String trackingNumber = trackingNumberService.generate();
 
@@ -172,9 +188,7 @@ public class FoiaRequestService {
             throw new InvalidStatusTransitionException(currentStatus, newStatus);
         }
 
-        // TODO(Phase 6): replace with authenticated user from SecurityContext
-        User actor = userRepository.findByEmail("testuser@example.com")
-            .orElseThrow(() -> new IllegalStateException("Seeded test user not found"));
+        User actor = requireCurrentUser();
 
         // Apply the change to the entity
         request.applyStatusChange(newStatus);

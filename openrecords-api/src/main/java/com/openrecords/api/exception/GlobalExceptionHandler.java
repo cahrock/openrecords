@@ -55,6 +55,25 @@ public class GlobalExceptionHandler {
     }
 
     // ============================================================
+    // 401 — Not authenticated
+    // ============================================================
+    @ExceptionHandler(UnauthenticatedException.class)
+    public ResponseEntity<ProblemDetail> handleUnauthenticated(
+        UnauthenticatedException ex, HttpServletRequest request
+    ) {
+        log.info("Unauthenticated request to {}: {}",
+            request.getRequestURI(), ex.getMessage());
+
+        ProblemDetail problem = problem(
+            HttpStatus.UNAUTHORIZED,
+            "Authentication required",
+            ex.getMessage(),
+            request
+        );
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(problem);
+    }
+
+    // ============================================================
     // 422 — Invalid status transition
     // ============================================================
     @ExceptionHandler(InvalidStatusTransitionException.class)
