@@ -13,6 +13,11 @@
 
       <nav class="nav-links">
         <app-persona-switcher />
+
+        @if (isStaff()) {
+          <a routerLink="/staff/queue" routerLinkActive="active">Queue</a>
+        }
+
         <a routerLink="/requests" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">
           My Requests
         </a>
