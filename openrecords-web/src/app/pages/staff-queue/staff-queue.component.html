@@ -1,0 +1,142 @@
+<header class="page-header">
+  <div>
+    <h1>Staff Queue</h1>
+    <p class="muted">Triage and manage incoming FOIA requests.</p>
+  </div>
+  <div class="user-pill">
+    <span class="pill-label">Acting as</span>
+    <span class="pill-name">{{ currentUser().fullName }}</span>
+  </div>
+</header>
+
+<section class="filters">
+  <div class="filter">
+    <label for="status-filter">Status</label>
+    <select
+      id="status-filter"
+      [ngModel]="filters().status"
+      (ngModelChange)="updateFilter('status', $event)"
+    >
+      <option value="">All statuses</option>
+      @for (s of allStatuses; track s) {
+        <option [value]="s">{{ formatStatus(s) }}</option>
+      }
+    </select>
+  </div>
+
+  <div class="filter">
+    <label for="assignment-filter">Assignment</label>
+    <select
+      id="assignment-filter"
+      [ngModel]="filters().assignment"
+      (ngModelChange)="updateFilter('assignment', $event)"
+    >
+      <option value="all">All</option>
+      <option value="mine">Assigned to me</option>
+      <option value="unassigned">Unassigned</option>
+    </select>
+  </div>
+
+  <div class="filter filter-grow">
+    <label for="search-filter">Search</label>
+    <input
+      id="search-filter"
+      type="text"
+      placeholder="Subject or tracking number"
+      [ngModel]="filters().search"
+      (ngModelChange)="updateFilter('search', $event)"
+    />
+  </div>
+
+  <button class="btn-secondary" (click)="clearFilters()">Clear</button>
+</section>
+
+@if (state().kind === 'loading') {
+  <div class="state-card state-loading">
+    <div class="spinner"></div>
+    <p>Loading queue…</p>
+  </div>
+}
+
+@else if (state().kind === 'error') {
+  @let s = state();
+  @if (s.kind === 'error') {
+    <div class="state-card state-error">
+      <h2>Couldn't load the queue</h2>
+      <p>{{ s.message }}</p>
+      <button class="btn-secondary" (click)="load()">Try again</button>
+    </div>
+  }
+}
+
+@else if (state().kind === 'ok') {
+  @let s = state();
+  @if (s.kind === 'ok') {
+
+    @if (s.data.totalElements === 0) {
+      <div class="state-card state-empty">
+        <div class="empty-icon">📥</div>
+        <h2>No requests match these filters</h2>
+        <p>Try adjusting the filters above or clearing them.</p>
+      </div>
+    } @else {
+
+      <div class="results-meta">
+        {{ s.data.totalElements }} request{{ s.data.totalElements === 1 ? '' : 's' }}
+      </div>
+
+      <div class="table-wrapper">
+        <table class="queue-table">
+          <thead>
+            <tr>
+              <th>Tracking</th>
+              <th>Subject</th>
+              <th>Status</th>
+              <th>Requester</th>
+              <th>Assignee</th>
+              <th>Due</th>
+              <th>Created</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (req of s.data.content; track req.id) {
+              <tr [class.overdue]="isOverdue(req)">
+                <td>
+                  <a [routerLink]="['/requests', req.id]" class="tracking-link">
+                    {{ req.trackingNumber }}
+                  </a>
+                </td>
+                <td class="subject">{{ req.subject }}</td>
+                <td>
+                  <span class="status-badge"
+                        [attr.data-status]="req.status"
+                        [class.terminal]="isTerminal(req.status)">
+                    {{ formatStatus(req.status) }}
+                  </span>
+                </td>
+                <td>{{ req.requester.fullName }}</td>
+                <td>
+                  @if (req.assignee) {
+                    {{ req.assignee.fullName }}
+                  } @else {
+                    <span class="muted">Unassigned</span>
+                  }
+                </td>
+                <td>
+                  @if (req.dueDate) {
+                    <span [class.overdue-text]="isOverdue(req)">
+                      {{ req.dueDate | date: 'mediumDate' }}
+                    </span>
+                  } @else {
+                    <span class="muted">—</span>
+                  }
+                </td>
+                <td>{{ req.createdAt | date: 'mediumDate' }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  }
+}

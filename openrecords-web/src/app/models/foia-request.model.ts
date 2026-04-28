@@ -63,6 +63,7 @@ export interface FoiaRequest {
   id: string;
   trackingNumber: string;
   requester: RequesterSummary;
+  assignee: RequesterSummary | null;
   subject: string;
   description: string;
   recordsRequested: string;

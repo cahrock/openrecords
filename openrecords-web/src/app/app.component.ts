@@ -2,7 +2,7 @@ import { Component, inject, OnInit, signal } from '@angular/core';
 import { RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
 import { ApiService, HealthResponse } from './services/api.service';
 import { PersonaSwitcherComponent } from './shared/persona-switcher/persona-switcher.component';
-
+import { UserContextService } from './services/user-context.service';
 
 type HealthState =
   | { kind: 'loading' }
@@ -18,8 +18,10 @@ type HealthState =
 })
 export class AppComponent implements OnInit {
   private readonly api = inject(ApiService);
+  private readonly userContext = inject(UserContextService);
 
   readonly health = signal<HealthState>({ kind: 'loading' });
+  readonly isStaff = this.userContext.isStaff;
 
   ngOnInit(): void {
     this.api.getHealth().subscribe({

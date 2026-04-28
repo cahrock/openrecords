@@ -42,11 +42,25 @@ export class ApiService {
    * List all requests with pagination.
    * Default sort: newest first.
    */
-  listRequests(query: PageQuery = {}): Observable<PageResponse<FoiaRequest>> {
+  /**
+   * List requests with optional filters.
+   * Default sort: newest first.
+   */
+  listRequests(query: PageQuery & {
+    status?: string;
+    assigneeId?: number;
+    unassignedOnly?: boolean;
+    search?: string;
+  } = {}): Observable<PageResponse<FoiaRequest>> {
     let params = new HttpParams();
     params = params.set('page', String(query.page ?? 0));
     params = params.set('size', String(query.size ?? 20));
     params = params.set('sort', query.sort ?? 'createdAt,desc');
+
+    if (query.status) params = params.set('status', query.status);
+    if (query.assigneeId != null) params = params.set('assigneeId', String(query.assigneeId));
+    if (query.unassignedOnly) params = params.set('unassignedOnly', 'true');
+    if (query.search) params = params.set('search', query.search);
 
     return this.http.get<PageResponse<FoiaRequest>>(
       `${this.baseUrl}/requests`,

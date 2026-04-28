@@ -38,6 +38,14 @@ export const routes: Routes = [
     title: 'Request Detail — OpenRecords',
   },
   {
+    path: 'staff/queue',
+    loadComponent: () =>
+      import('./pages/staff-queue/staff-queue.component').then(
+        (m) => m.StaffQueueComponent
+      ),
+    title: 'Staff Queue — OpenRecords',
+  },
+  {
     path: '**',
     loadComponent: () =>
       import('./pages/not-found/not-found.component').then(
