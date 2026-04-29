@@ -90,3 +90,12 @@ export interface PageResponse<T> {
   totalElements: number;
   totalPages: number;
 }
+
+export interface StatusHistoryEntry {
+  id: number;
+  fromStatus: FoiaRequestStatus | null;
+  toStatus: FoiaRequestStatus;
+  changedBy: RequesterSummary;
+  reason: string | null;
+  changedAt: string;
+}

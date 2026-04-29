@@ -6,6 +6,7 @@ import {
   FoiaRequest,
   PageResponse,
 } from '../models/foia-request.model';
+import { StatusHistoryEntry } from '../models/foia-request.model';
 
 export interface HealthResponse {
   status: string;
@@ -116,6 +117,15 @@ export class ApiService {
     return this.http.patch<FoiaRequest>(
       `${this.baseUrl}/requests/${id}/assignment`,
       { assigneeUserId }
+    );
+  }
+
+  /**
+   * Fetch the full status-change history for a request.
+   */
+  getRequestHistory(id: string): Observable<StatusHistoryEntry[]> {
+    return this.http.get<StatusHistoryEntry[]>(
+      `${this.baseUrl}/requests/${id}/history`
     );
   }
 }

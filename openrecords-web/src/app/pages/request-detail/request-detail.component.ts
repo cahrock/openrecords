@@ -6,6 +6,7 @@ import { ApiService } from '../../services/api.service';
 import {
   FoiaRequest,
   FoiaRequestStatus,
+  StatusHistoryEntry,
   TERMINAL_STATUSES,
 } from '../../models/foia-request.model';
 import { getAllowedTransitions } from '../../models/status-transitions';
@@ -51,6 +52,8 @@ export class RequestDetailComponent implements OnInit {
     return getAllowedTransitions(s.data.status);
   });
 
+  readonly history = signal<StatusHistoryEntry[]>([]);
+
   ngOnInit(): void {
     const id = this.route.snapshot.paramMap.get('id');
     if (!id) {
@@ -66,6 +69,7 @@ export class RequestDetailComponent implements OnInit {
       next: (data) => {
         this.state.set({ kind: 'ok', data });
         this.assigneeId.set(data.assignee?.id ?? null);
+        this.loadHistory(id);
       },
       error: (err) => {
         console.error('Failed to load request:', err);
@@ -74,6 +78,17 @@ export class RequestDetailComponent implements OnInit {
           message: err?.error?.detail ?? err?.message ?? 'Failed to load request',
           status: err?.status,
         });
+      },
+    });
+  }
+
+  /** Load the audit-trail history for the current request. */
+  loadHistory(id: string): void {
+    this.api.getRequestHistory(id).subscribe({
+      next: (history) => this.history.set(history),
+      error: (err) => {
+        console.error('Failed to load history:', err);
+        // Non-fatal — the page still works without history
       },
     });
   }
@@ -95,6 +110,7 @@ export class RequestDetailComponent implements OnInit {
         this.state.set({ kind: 'ok', data: updated });
         this.transitionTarget.set('');
         this.transitionReason.set('');
+        this.loadHistory(updated.id);
         this.actionState.set({ kind: 'idle' });
       },
       error: (err) => {
@@ -117,6 +133,7 @@ export class RequestDetailComponent implements OnInit {
     this.api.assignRequest(s.data.id, this.assigneeId()).subscribe({
       next: (updated) => {
         this.state.set({ kind: 'ok', data: updated });
+        this.loadHistory(updated.id);
         this.actionState.set({ kind: 'idle' });
       },
       error: (err) => {

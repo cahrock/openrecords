@@ -7,6 +7,8 @@ import com.openrecords.api.domain.User;
 import com.openrecords.api.dto.CreateFoiaRequestDto;
 import com.openrecords.api.dto.FoiaRequestDto;
 import com.openrecords.api.dto.PageDto;
+import com.openrecords.api.dto.StatusHistoryDto;
+import com.openrecords.api.dto.UserSummaryDto;
 import com.openrecords.api.exception.InvalidStatusTransitionException;
 import com.openrecords.api.exception.UnauthenticatedException;
 import com.openrecords.api.mapper.FoiaRequestMapper;
@@ -25,6 +27,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.NoSuchElementException;
 import java.util.UUID;
+import java.util.List;
 
 /**
  * Orchestrates FOIA request operations.
@@ -250,5 +253,35 @@ public class FoiaRequestService {
         FoiaRequest saved = requestRepository.save(request);
         log.info("Assigned {} to {}", saved.getTrackingNumber(), staffUser.getEmail());
         return mapper.toDto(saved);
+    }
+
+    /**
+     * Retrieve the full status history for a request, oldest first.
+     */
+    public List<StatusHistoryDto> getRequestHistory(UUID requestId) {
+        // Verify the request exists (404 if not)
+        if (!requestRepository.existsById(requestId)) {
+            throw new NoSuchElementException("FOIA request not found: " + requestId);
+        }
+
+        return historyRepository.findByRequestIdOrderByChangedAtAsc(requestId)
+            .stream()
+            .map(this::toHistoryDto)
+            .toList();
+    }
+
+    private StatusHistoryDto toHistoryDto(FoiaRequestStatusHistory entity) {
+        return new StatusHistoryDto(
+            entity.getId(),
+            entity.getFromStatus(),
+            entity.getToStatus(),
+            new UserSummaryDto(
+                entity.getChangedBy().getId(),
+                entity.getChangedBy().getEmail(),
+                entity.getChangedBy().getFullName()
+            ),
+            entity.getReason(),
+            entity.getChangedAt()
+        );
     }
 }

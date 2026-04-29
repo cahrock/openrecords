@@ -7,6 +7,8 @@ import com.openrecords.api.dto.FoiaRequestDto;
 import com.openrecords.api.dto.PageDto;
 import com.openrecords.api.dto.StatusTransitionDto;
 import com.openrecords.api.service.FoiaRequestService;
+import com.openrecords.api.dto.StatusHistoryDto;
+import java.util.List;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
@@ -147,5 +149,13 @@ public class FoiaRequestController {
         @RequestBody AssignmentDto dto
     ) {
         return service.assignRequest(id, dto.assigneeUserId());
+    }
+
+    /**
+     * Fetch the full status-change history for a request, oldest-first.
+     */
+    @GetMapping("/{id}/history")
+    public List<StatusHistoryDto> getRequestHistory(@PathVariable UUID id) {
+        return service.getRequestHistory(id);
     }
 }

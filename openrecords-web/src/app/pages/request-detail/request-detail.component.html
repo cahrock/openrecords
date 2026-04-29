@@ -3,222 +3,188 @@
 </header>
 
 @if (state().kind === 'loading') {
-  <div class="state-card state-loading">
-    <div class="spinner"></div>
-    <p>Loading request…</p>
-  </div>
+<div class="state-card state-loading">
+  <div class="spinner"></div>
+  <p>Loading request…</p>
+</div>
 }
 
 @else if (state().kind === 'error') {
-  @let s = state();
-  @if (s.kind === 'error') {
-    <div class="state-card state-error">
-      @if (s.status === 404) {
-        <h2>Request not found</h2>
-        <p>We couldn't find a FOIA request with that ID.</p>
-        <a routerLink="/requests" class="btn-primary">Return to My Requests</a>
-      } @else {
-        <h2>Something went wrong</h2>
-        <p>{{ s.message }}</p>
-        <button class="btn-secondary" (click)="ngOnInit()">Try again</button>
-      }
-    </div>
+@let s = state();
+@if (s.kind === 'error') {
+<div class="state-card state-error">
+  @if (s.status === 404) {
+  <h2>Request not found</h2>
+  <p>We couldn't find a FOIA request with that ID.</p>
+  <a routerLink="/requests" class="btn-primary">Return to My Requests</a>
+  } @else {
+  <h2>Something went wrong</h2>
+  <p>{{ s.message }}</p>
+  <button class="btn-secondary" (click)="ngOnInit()">Try again</button>
   }
+</div>
+}
 }
 
 @else if (state().kind === 'ok') {
-  @let s = state();
-  @if (s.kind === 'ok') {
-    @let req = s.data;
+@let s = state();
+@if (s.kind === 'ok') {
+@let req = s.data;
 
-    <!-- Hero card -->
-    <section class="hero-card">
-      <div class="hero-top">
-        <span class="tracking">{{ req.trackingNumber }}</span>
-        <span class="status-badge"
-              [attr.data-status]="req.status"
-              [class.terminal]="isTerminal(req.status)">
-          {{ formatStatus(req.status) }}
-        </span>
-      </div>
-      <h1>{{ req.subject }}</h1>
-      <p class="hero-meta">
-        Filed by {{ req.requester.fullName }} on
-        {{ req.createdAt | date: 'longDate' }}
-      </p>
+<!-- Hero card -->
+<section class="hero-card">
+  <div class="hero-top">
+    <span class="tracking">{{ req.trackingNumber }}</span>
+    <span class="status-badge" [attr.data-status]="req.status" [class.terminal]="isTerminal(req.status)">
+      {{ formatStatus(req.status) }}
+    </span>
+  </div>
+  <h1>{{ req.subject }}</h1>
+  <p class="hero-meta">
+    Filed by {{ req.requester.fullName }} on
+    {{ req.createdAt | date: 'longDate' }}
+  </p>
+</section>
+
+<div class="detail-grid">
+
+  <!-- Main column -->
+  <div class="detail-main">
+
+    <section class="detail-section">
+      <h2>Description</h2>
+      <p class="prose">{{ req.description }}</p>
     </section>
 
-    <div class="detail-grid">
+    <section class="detail-section">
+      <h2>Records Requested</h2>
+      <p class="prose">{{ req.recordsRequested }}</p>
+    </section>
 
-      <!-- Main column -->
-      <div class="detail-main">
+    <!-- Staff actions panel -->
+    @if (isStaff()) {
+    <section class="detail-section staff-actions">
+      <h2>Staff Actions</h2>
 
-        <section class="detail-section">
-          <h2>Description</h2>
-          <p class="prose">{{ req.description }}</p>
-        </section>
+      @if (actionState().kind === 'error') {
+      @let a = actionState();
+      @if (a.kind === 'error') {
+      <div class="action-error">
+        <strong>Action failed:</strong> {{ a.message }}
+      </div>
+      }
+      }
 
-        <section class="detail-section">
-          <h2>Records Requested</h2>
-          <p class="prose">{{ req.recordsRequested }}</p>
-        </section>
-
-        <!-- Staff actions panel -->
-        @if (isStaff()) {
-          <section class="detail-section staff-actions">
-            <h2>Staff Actions</h2>
-
-            @if (actionState().kind === 'error') {
-              @let a = actionState();
-              @if (a.kind === 'error') {
-                <div class="action-error">
-                  <strong>Action failed:</strong> {{ a.message }}
-                </div>
-              }
+      <!-- Assignment -->
+      <div class="action-block">
+        <label class="action-label">Assignment</label>
+        <div class="action-row">
+          <select [ngModel]="assigneeId()" (ngModelChange)="assigneeId.set($event)">
+            <option [ngValue]="null">— Unassigned —</option>
+            @for (staff of assignableStaff; track staff.id) {
+            <option [ngValue]="staff.id">{{ staff.fullName }}</option>
             }
-
-            <!-- Assignment -->
-            <div class="action-block">
-              <label class="action-label">Assignment</label>
-              <div class="action-row">
-                <select
-                  [ngModel]="assigneeId()"
-                  (ngModelChange)="assigneeId.set($event)"
-                >
-                  <option [ngValue]="null">— Unassigned —</option>
-                  @for (staff of assignableStaff; track staff.id) {
-                    <option [ngValue]="staff.id">{{ staff.fullName }}</option>
-                  }
-                </select>
-                <button
-                  class="btn-primary"
-                  type="button"
-                  (click)="saveAssignment()"
-                  [disabled]="actionState().kind === 'submitting'"
-                >
-                  Save
-                </button>
-                @if (req.assignee?.id !== userContext.current().id) {
-                  <button
-                    class="btn-secondary"
-                    type="button"
-                    (click)="assignToMe()"
-                    [disabled]="actionState().kind === 'submitting'"
-                  >
-                    Assign to me
-                  </button>
-                }
-              </div>
-            </div>
-
-            <!-- Status transition -->
-            @if (allowedTransitions().length > 0) {
-              <div class="action-block">
-                <label class="action-label">Transition Status</label>
-                <div class="action-row">
-                  <select
-                    [ngModel]="transitionTarget()"
-                    (ngModelChange)="transitionTarget.set($event)"
-                  >
-                    <option value="">— Select target status —</option>
-                    @for (target of allowedTransitions(); track target) {
-                      <option [value]="target">{{ formatStatus(target) }}</option>
-                    }
-                  </select>
-                </div>
-                <input
-                  class="reason-input"
-                  type="text"
-                  placeholder="Reason for transition (optional)"
-                  [ngModel]="transitionReason()"
-                  (ngModelChange)="transitionReason.set($event)"
-                />
-                <button
-                  class="btn-primary"
-                  type="button"
-                  (click)="transitionStatus()"
-                  [disabled]="!transitionTarget() || actionState().kind === 'submitting'"
-                >
-                  Apply Transition
-                </button>
-              </div>
-            } @else {
-              <div class="terminal-notice">
-                This request is in a terminal state. No further transitions allowed.
-              </div>
-            }
-          </section>
-        }
-
+          </select>
+          <button class="btn-primary" type="button" (click)="saveAssignment()"
+            [disabled]="actionState().kind === 'submitting'">
+            Save
+          </button>
+          @if (req.assignee?.id !== userContext.current().id) {
+          <button class="btn-secondary" type="button" (click)="assignToMe()"
+            [disabled]="actionState().kind === 'submitting'">
+            Assign to me
+          </button>
+          }
+        </div>
       </div>
 
-      <!-- Sidebar -->
-      <aside class="detail-sidebar">
+      <!-- Status transition -->
+      @if (allowedTransitions().length > 0) {
+      <div class="action-block">
+        <label class="action-label">Transition Status</label>
+        <div class="action-row">
+          <select [ngModel]="transitionTarget()" (ngModelChange)="transitionTarget.set($event)">
+            <option value="">— Select target status —</option>
+            @for (target of allowedTransitions(); track target) {
+            <option [value]="target">{{ formatStatus(target) }}</option>
+            }
+          </select>
+        </div>
+        <input class="reason-input" type="text" placeholder="Reason for transition (optional)"
+          [ngModel]="transitionReason()" (ngModelChange)="transitionReason.set($event)" />
+        <button class="btn-primary" type="button" (click)="transitionStatus()"
+          [disabled]="!transitionTarget() || actionState().kind === 'submitting'">
+          Apply Transition
+        </button>
+      </div>
+      } @else {
+      <div class="terminal-notice">
+        This request is in a terminal state. No further transitions allowed.
+      </div>
+      }
+    </section>
+    }
 
-        <section class="detail-section">
-          <h2>Assignment</h2>
-          @if (req.assignee) {
-            <p class="assignee-name">{{ req.assignee.fullName }}</p>
-            <p class="muted">{{ req.assignee.email }}</p>
-          } @else {
-            <p class="muted">Unassigned</p>
-          }
-        </section>
+  </div>
 
-        <section class="detail-section">
-          <h2>Timeline</h2>
-          <ol class="timeline">
-            <li class="timeline-item active">
-              <div class="timeline-dot"></div>
-              <div class="timeline-content">
-                <strong>Created</strong>
-                <span>{{ req.createdAt | date: 'medium' }}</span>
-              </div>
-            </li>
-            <li class="timeline-item" [class.active]="req.submittedAt">
-              <div class="timeline-dot"></div>
-              <div class="timeline-content">
-                <strong>Submitted</strong>
-                @if (req.submittedAt) {
-                  <span>{{ req.submittedAt | date: 'medium' }}</span>
-                } @else {
-                  <span class="muted">Pending</span>
-                }
-              </div>
-            </li>
-            <li class="timeline-item" [class.active]="req.acknowledgedAt">
-              <div class="timeline-dot"></div>
-              <div class="timeline-content">
-                <strong>Acknowledged</strong>
-                @if (req.acknowledgedAt) {
-                  <span>{{ req.acknowledgedAt | date: 'medium' }}</span>
-                } @else {
-                  <span class="muted">Pending</span>
-                }
-              </div>
-            </li>
-            <li class="timeline-item" [class.active]="req.closedAt">
-              <div class="timeline-dot"></div>
-              <div class="timeline-content">
-                <strong>Closed</strong>
-                @if (req.closedAt) {
-                  <span>{{ req.closedAt | date: 'medium' }}</span>
-                } @else {
-                  <span class="muted">Pending</span>
-                }
-              </div>
-            </li>
-          </ol>
-        </section>
+  <!-- Sidebar -->
+  <aside class="detail-sidebar">
 
-        @if (req.dueDate) {
-          <section class="detail-section">
-            <h2>Due Date</h2>
-            <p class="due-date">{{ req.dueDate | date: 'mediumDate' }}</p>
-          </section>
+    <section class="detail-section">
+      <h2>Assignment</h2>
+      @if (req.assignee) {
+      <p class="assignee-name">{{ req.assignee.fullName }}</p>
+      <p class="muted">{{ req.assignee.email }}</p>
+      } @else {
+      <p class="muted">Unassigned</p>
+      }
+    </section>
+
+    <section class="detail-section">
+      <h2>Activity</h2>
+      @if (history().length === 0) {
+      <p class="muted">No activity recorded yet.</p>
+      } @else {
+      <ol class="audit-timeline">
+        @for (entry of history(); track entry.id) {
+        <li class="audit-item">
+          <div class="audit-dot" [attr.data-status]="entry.toStatus" [class.terminal]="isTerminal(entry.toStatus)">
+          </div>
+          <div class="audit-content">
+            <div class="audit-row">
+              @if (entry.fromStatus) {
+              <span class="status-badge subtle" [attr.data-status]="entry.fromStatus">
+                {{ formatStatus(entry.fromStatus) }}
+              </span>
+              <span class="audit-arrow">→</span>
+              }
+              <span class="status-badge" [attr.data-status]="entry.toStatus"
+                [class.terminal]="isTerminal(entry.toStatus)">
+                {{ formatStatus(entry.toStatus) }}
+              </span>
+            </div>
+            <div class="audit-meta">
+              by <strong>{{ entry.changedBy.fullName }}</strong>
+              · {{ entry.changedAt | date: 'medium' }}
+            </div>
+            @if (entry.reason) {
+            <div class="audit-reason">"{{ entry.reason }}"</div>
+            }
+          </div>
+        </li>
         }
+      </ol>
+      }
+    </section>
 
-      </aside>
-    </div>
-  }
+    @if (req.dueDate) {
+    <section class="detail-section">
+      <h2>Due Date</h2>
+      <p class="due-date">{{ req.dueDate | date: 'mediumDate' }}</p>
+    </section>
+    }
+
+  </aside>
+</div>
+}
 }
