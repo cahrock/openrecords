@@ -90,4 +90,32 @@ export class ApiService {
   createRequest(request: CreateFoiaRequest): Observable<FoiaRequest> {
     return this.http.post<FoiaRequest>(`${this.baseUrl}/requests`, request);
   }
+
+  /**
+   * Transition a request's status.
+   */
+  transitionStatus(
+    id: string,
+    targetStatus: string,
+    reason: string
+  ): Observable<FoiaRequest> {
+    return this.http.patch<FoiaRequest>(
+      `${this.baseUrl}/requests/${id}/status`,
+      { targetStatus, reason }
+    );
+  }
+
+  /**
+   * Assign or unassign a request.
+   * Pass null for assigneeUserId to unassign.
+   */
+  assignRequest(
+    id: string,
+    assigneeUserId: number | null
+  ): Observable<FoiaRequest> {
+    return this.http.patch<FoiaRequest>(
+      `${this.baseUrl}/requests/${id}/assignment`,
+      { assigneeUserId }
+    );
+  }
 }

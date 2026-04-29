@@ -48,3 +48,11 @@ export class UserContextService {
     return AVAILABLE_PERSONAS.find(p => p.email === saved) ?? AVAILABLE_PERSONAS[0];
   }
 }
+
+/**
+ * Subset of personas with STAFF or ADMIN role — used as the assignee
+ * dropdown options on the request detail page.
+ */
+export const ASSIGNABLE_STAFF = AVAILABLE_PERSONAS.filter(
+  p => p.role === 'STAFF' || p.role === 'ADMIN'
+);
