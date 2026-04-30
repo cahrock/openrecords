@@ -4,6 +4,8 @@ import com.openrecords.api.dto.AuthResponse;
 import com.openrecords.api.dto.LoginRequest;
 import com.openrecords.api.dto.RegisterRequest;
 import com.openrecords.api.dto.RegistrationResponse;
+import com.openrecords.api.dto.VerifyEmailRequest;
+import com.openrecords.api.dto.VerifyEmailResponse;
 import com.openrecords.api.service.AuthService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -29,5 +31,11 @@ public class AuthController {
     @ResponseStatus(HttpStatus.CREATED)
     public RegistrationResponse register(@Valid @RequestBody RegisterRequest request) {
         return authService.register(request);
+    }
+
+    @PostMapping("/verify-email")
+    @ResponseStatus(HttpStatus.OK)
+    public VerifyEmailResponse verifyEmail(@Valid @RequestBody VerifyEmailRequest request) {
+        return authService.verifyEmail(request.token());
     }
 }

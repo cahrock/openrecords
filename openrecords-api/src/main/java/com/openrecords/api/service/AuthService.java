@@ -6,9 +6,11 @@ import com.openrecords.api.dto.AuthResponse;
 import com.openrecords.api.dto.LoginRequest;
 import com.openrecords.api.dto.RegisterRequest;
 import com.openrecords.api.dto.UserSummaryDto;
+import com.openrecords.api.dto.VerifyEmailResponse;
 import com.openrecords.api.exception.EmailAlreadyExistsException;
 import com.openrecords.api.exception.EmailNotVerifiedException;
 import com.openrecords.api.exception.InvalidCredentialsException;
+import com.openrecords.api.exception.InvalidVerificationTokenException;
 import com.openrecords.api.repository.UserRepository;
 import com.openrecords.api.repository.VerificationTokenRepository;
 import com.openrecords.api.security.JwtService;
@@ -132,5 +134,57 @@ public class AuthService {
         byte[] randomBytes = new byte[32];
         new SecureRandom().nextBytes(randomBytes);
         return Base64.getUrlEncoder().withoutPadding().encodeToString(randomBytes);
+    }
+
+    /**
+     * Verify a user's email using a one-time token.
+     * On success: marks user verified and consumes the token.
+     */
+    @Transactional
+    public VerifyEmailResponse verifyEmail(String tokenValue) {
+        VerificationToken token = verificationTokenRepository.findByToken(tokenValue)
+            .orElseThrow(() -> {
+                log.info("Verification failed: token not found");
+                return new InvalidVerificationTokenException("token not found");
+            });
+
+        if (token.isUsed()) {
+            log.info("Verification failed: token already used (id={})", token.getId());
+            throw new InvalidVerificationTokenException("token already used");
+        }
+
+        if (token.isExpired()) {
+            log.info("Verification failed: token expired (id={}, expiresAt={})",
+                token.getId(), token.getExpiresAt());
+            throw new InvalidVerificationTokenException("token expired");
+        }
+
+        User user = token.getUser();
+
+        if (user.isEmailVerified()) {
+            // Idempotent: someone clicked the link twice quickly. Don't error.
+            log.info("Verification idempotent: user {} already verified", user.getEmail());
+            token.markUsed();
+            verificationTokenRepository.save(token);
+            return new VerifyEmailResponse(
+                user.getEmail(),
+                "Email already verified. You can log in."
+            );
+        }
+
+        // Happy path: mark verified, consume token
+        user.setEmailVerified(true);
+        user.setEmailVerifiedAt(OffsetDateTime.now());
+        userRepository.save(user);
+
+        token.markUsed();
+        verificationTokenRepository.save(token);
+
+        log.info("Email verified: {}", user.getEmail());
+
+        return new VerifyEmailResponse(
+            user.getEmail(),
+            "Email verified successfully. You can now log in."
+        );
     }
 }

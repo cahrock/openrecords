@@ -267,4 +267,23 @@ public class GlobalExceptionHandler {
         );
         return ResponseEntity.status(HttpStatus.CONFLICT).body(problem);
     }
+
+    // ============================================================
+    // 400 — Invalid verification token
+    // ============================================================
+    @ExceptionHandler(InvalidVerificationTokenException.class)
+    public ResponseEntity<ProblemDetail> handleInvalidVerificationToken(
+        InvalidVerificationTokenException ex, HttpServletRequest request
+    ) {
+        log.info("Invalid verification token at {}: {}",
+            request.getRequestURI(), ex.getMessage());
+
+        ProblemDetail problem = problem(
+            HttpStatus.BAD_REQUEST,
+            "Invalid verification link",
+            "The verification link is invalid or has expired. Please request a new one.",
+            request
+        );
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(problem);
+    }
 }
