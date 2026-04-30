@@ -213,4 +213,40 @@ public class GlobalExceptionHandler {
         );
         return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(problem);
     }
+
+    // ============================================================
+    // 401 — Invalid credentials
+    // ============================================================
+    @ExceptionHandler(InvalidCredentialsException.class)
+    public ResponseEntity<ProblemDetail> handleInvalidCredentials(
+        InvalidCredentialsException ex, HttpServletRequest request
+    ) {
+        log.info("Invalid credentials at {}: {}", request.getRequestURI(), ex.getMessage());
+
+        ProblemDetail problem = problem(
+            HttpStatus.UNAUTHORIZED,
+            "Invalid credentials",
+            "Email or password is incorrect.",
+            request
+        );
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(problem);
+    }
+
+    // ============================================================
+    // 403 — Email not verified
+    // ============================================================
+    @ExceptionHandler(EmailNotVerifiedException.class)
+    public ResponseEntity<ProblemDetail> handleEmailNotVerified(
+        EmailNotVerifiedException ex, HttpServletRequest request
+    ) {
+        log.info("Login attempt with unverified email at {}", request.getRequestURI());
+
+        ProblemDetail problem = problem(
+            HttpStatus.FORBIDDEN,
+            "Email not verified",
+            ex.getMessage(),
+            request
+        );
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(problem);
+    }
 }
