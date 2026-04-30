@@ -249,4 +249,22 @@ public class GlobalExceptionHandler {
         );
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(problem);
     }
+
+    // ============================================================
+    // 409 — Email already registered
+    // ============================================================
+    @ExceptionHandler(EmailAlreadyExistsException.class)
+    public ResponseEntity<ProblemDetail> handleEmailAlreadyExists(
+        EmailAlreadyExistsException ex, HttpServletRequest request
+    ) {
+        log.info("Registration conflict at {}: {}", request.getRequestURI(), ex.getMessage());
+
+        ProblemDetail problem = problem(
+            HttpStatus.CONFLICT,
+            "Email already registered",
+            ex.getMessage(),
+            request
+        );
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(problem);
+    }
 }

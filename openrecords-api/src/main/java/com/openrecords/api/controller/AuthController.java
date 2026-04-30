@@ -2,6 +2,8 @@ package com.openrecords.api.controller;
 
 import com.openrecords.api.dto.AuthResponse;
 import com.openrecords.api.dto.LoginRequest;
+import com.openrecords.api.dto.RegisterRequest;
+import com.openrecords.api.dto.RegistrationResponse;
 import com.openrecords.api.service.AuthService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -21,5 +23,11 @@ public class AuthController {
     @ResponseStatus(HttpStatus.OK)
     public AuthResponse login(@Valid @RequestBody LoginRequest request) {
         return authService.login(request);
+    }
+
+    @PostMapping("/register")
+    @ResponseStatus(HttpStatus.CREATED)
+    public RegistrationResponse register(@Valid @RequestBody RegisterRequest request) {
+        return authService.register(request);
     }
 }

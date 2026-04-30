@@ -1,13 +1,24 @@
 package com.openrecords.api.service;
 
 import com.openrecords.api.domain.User;
+import com.openrecords.api.domain.VerificationToken;
 import com.openrecords.api.dto.AuthResponse;
 import com.openrecords.api.dto.LoginRequest;
+import com.openrecords.api.dto.RegisterRequest;
 import com.openrecords.api.dto.UserSummaryDto;
+import com.openrecords.api.exception.EmailAlreadyExistsException;
 import com.openrecords.api.exception.EmailNotVerifiedException;
 import com.openrecords.api.exception.InvalidCredentialsException;
 import com.openrecords.api.repository.UserRepository;
+import com.openrecords.api.repository.VerificationTokenRepository;
 import com.openrecords.api.security.JwtService;
+import org.springframework.transaction.annotation.Transactional;
+import com.openrecords.api.dto.RegistrationResponse;
+
+import java.security.SecureRandom;
+import java.time.OffsetDateTime;
+import java.util.Base64;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -21,15 +32,18 @@ public class AuthService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
+    private final VerificationTokenRepository verificationTokenRepository;
 
     public AuthService(
         UserRepository userRepository,
         PasswordEncoder passwordEncoder,
-        JwtService jwtService
+        JwtService jwtService,
+        VerificationTokenRepository verificationTokenRepository
     ) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtService = jwtService;
+        this.verificationTokenRepository = verificationTokenRepository;
     }
 
     /**
@@ -67,5 +81,56 @@ public class AuthService {
             new UserSummaryDto(user.getId(), user.getEmail(), user.getFullName()),
             user.getRole().name()
         );
+    }
+
+    /**
+     * Register a new user. Creates the account in unverified state
+     * and issues a verification token (logged to console for now).
+     */
+    @Transactional
+    public RegistrationResponse register(RegisterRequest request) {
+        String normalizedEmail = request.email().trim().toLowerCase();
+
+        // Check for duplicate
+        if (userRepository.findByEmail(normalizedEmail).isPresent()) {
+            throw new EmailAlreadyExistsException(normalizedEmail);
+        }
+
+        // Create the user
+        User user = new User(
+            normalizedEmail,
+            passwordEncoder.encode(request.password()),
+            request.fullName().trim(),
+            User.Role.REQUESTER
+        );
+        user.setEmailVerified(false);
+        user = userRepository.save(user);
+
+        // Generate verification token (32 random bytes, base64-url encoded)
+        String tokenValue = generateRandomToken();
+        OffsetDateTime expiresAt = OffsetDateTime.now().plusHours(24);
+        VerificationToken token = new VerificationToken(user, tokenValue, expiresAt);
+        verificationTokenRepository.save(token);
+
+        // Log the verification link (Phase 7 will send a real email)
+        String verificationLink = "http://localhost:4200/verify?token=" + tokenValue;
+        log.info("=================================================");
+        log.info("Verification link for {}: {}", normalizedEmail, verificationLink);
+        log.info("=================================================");
+
+        log.info("Registration success: {} ({})", user.getEmail(), user.getRole());
+
+        return new RegistrationResponse(
+            user.getId(),
+            user.getEmail(),
+            user.getFullName(),
+            "Account created. Check your email to verify."
+        );
+    }
+
+    private String generateRandomToken() {
+        byte[] randomBytes = new byte[32];
+        new SecureRandom().nextBytes(randomBytes);
+        return Base64.getUrlEncoder().withoutPadding().encodeToString(randomBytes);
     }
 }
