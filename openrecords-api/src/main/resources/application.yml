@@ -56,8 +56,19 @@ server:
     include-binding-errors: never
 
 # ============================================================
-# APP-SPECIFIC CONFIG
+# APP-SPECIFIC CONFIG & JWT Authentication
 # ============================================================
 openrecords:
+  jwt:
+    # Secret used to sign tokens. Must be at least 32 bytes (256 bits) for HS256.
+    # Override in production via OPENRECORDS_JWT_SECRET env var.
+    secret: ${OPENRECORDS_JWT_SECRET:dev_only_secret_must_be_at_least_32_chars_long_DO_NOT_USE_IN_PRODUCTION}
+    # Access token lifetime in milliseconds (15 minutes)
+    access-token-ms: 900000
+    # Refresh token lifetime in milliseconds (30 days)
+    refresh-token-ms: 2592000000
+    # Token issuer claim
+    issuer: openrecords-api
+  
   tracking-number:
     prefix: FOIA

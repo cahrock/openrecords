@@ -15,6 +15,7 @@ import org.springframework.stereotype.Component;
  * header lookup with proper JWT validation; this class will then be
  * populated from a verified token claim instead.
  */
+
 @Component
 @Scope(value = "request", proxyMode = ScopedProxyMode.TARGET_CLASS)
 public class CurrentUser {

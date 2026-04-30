@@ -26,7 +26,7 @@ import java.util.Optional;
  * Anyone can claim to be any user by setting the header. Phase 6 replaces
  * this with JWT validation.
  */
-@Component
+//@Component
 public class CurrentUserFilter extends OncePerRequestFilter {
 
     private static final Logger log = LoggerFactory.getLogger(CurrentUserFilter.class);
