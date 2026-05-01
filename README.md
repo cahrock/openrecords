@@ -8,13 +8,24 @@ Submitted as a portfolio project for federal full-stack developer roles emphasiz
 
 A working two-sided portal with end-to-end data flow:
 
+**Authentication** — JWT-based authentication with bcrypt password hashing (cost factor 12), email verification flow with one-time tokens, refresh tokens for session continuity, and route guards enforcing role-based access.
+
 **Citizen portal** — file FOIA requests, track status across an 11-state workflow (DRAFT → SUBMITTED → ACKNOWLEDGED → ASSIGNED → UNDER_REVIEW → ... → CLOSED), and view request details.
 
 **Backend API** — RESTful endpoints with RFC 7807 ProblemDetail error responses, JPA Specifications for filtered queries, optimistic locking, audit-trail history, and 20-business-day SLA due-date calculation.
 
 **Database** — Schema managed via Flyway migrations (V1–V4), enforced state-machine via CHECK constraints, partial indexes for staff queue queries.
 
+
+
 ## Screenshots
+
+### Authentication
+![Login](docs/screenshots/login-page.png)
+![Registration](docs/screenshots/register-page.png)
+
+### Staff Console
+![Request detail with staff actions and audit trail](docs/screenshots/request-detail-staff.png)
 
 ### Citizen portal
 ![My Requests](docs/screenshots/my-requests.png)
@@ -27,6 +38,10 @@ A working two-sided portal with end-to-end data flow:
 
 ## Architecture Highlights
 
+- **JWT authentication with refresh tokens** — access tokens (15 min) for API requests; refresh tokens (30 days) stored in `refresh_tokens` table for revocability. Authorization header injection handled by HTTP interceptor.
+- **Bcrypt password hashing** — cost factor 12 (~300ms per hash) defeats brute-force attacks. Generic "invalid credentials" error message prevents account enumeration.
+- **Email verification flow** — single-use tokens with 24-hour expiration. Idempotent verification handles duplicate clicks gracefully.
+- **Route guards with redirect preservation** — unauthenticated users requesting `/staff/queue` are redirected to login, then routed back to their original destination after sign-in.
 - **State-machine domain model** — `FoiaRequestStatus` with allowed-transition rules enforced in service layer; invalid transitions return HTTP 422 with structured error.
 - **Audit trail** — every status change writes a `foia_request_status_history` row in the same transaction as the status update, ensuring consistency.
 - **RFC 7807 error responses** — global exception handler returns standardized ProblemDetail JSON for 400/404/422/500, never leaking stack traces.
@@ -75,13 +90,15 @@ npm start                  # http://localhost:4200
 
 ### Demo data
 
-Seeded test users (BCrypt password: `password123`):
+Seeded test users (BCrypt password: `password123`, all pre-verified):
 
 | Role | Email | Use |
 |---|---|---|
 | REQUESTER | testuser@example.com | Files FOIA requests via citizen portal |
 | STAFF | intake.officer@example.com | Triage and acknowledgement |
 | STAFF | case.officer@example.com | Records review |
+
+New accounts created via `/register` start unverified. Verification links are logged to the Spring Boot console (Phase 7 will wire real email sending).
 
 The Angular UI currently runs as the test requester (auth/JWT planned for Phase 6).
 
@@ -128,10 +145,10 @@ Rotate passwords on a regular schedule.
 | Phase 3: Frontend scaffold | ✅ Done | Angular 18 with proxy and health check |
 | Phase 4a: FOIA CRUD | ✅ Done | Create + list + retrieve API endpoints |
 | Phase 4b: Angular UI | ✅ Done | Form, list, and detail pages |
-| Phase 5: Staff console | 🚧 In progress | State machine, assignment, SLA, queue filtering |
-| Phase 6: Authentication | Planned | JWT, login, registration, email verification |
+| Phase 5: Staff console | ✅ Done | State machine, assignment, SLA, queue filtering, audit timeline |
+| Phase 6: Authentication | ✅ Done | JWT, bcrypt, registration, email verification, route guards |
 | Phase 7: Notifications | Planned | Email triggers (Spring Mail + Thymeleaf + MailHog) |
-| Phase 8: Deployment | Planned | AWS ECS + RDS + S3 |
+| Phase 8: Deployment | Planned | AWS ECS + RDS + S3, HttpOnly cookies, silent token refresh |
 
 ## License
 
