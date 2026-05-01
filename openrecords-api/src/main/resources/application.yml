@@ -45,6 +45,23 @@ spring:
       name: ${OPENRECORDS_ADMIN_USER:admin}
       password: ${OPENRECORDS_ADMIN_PASSWORD:admin}
 
+  
+  # ============================================================
+  # MAIL (uses MailHog in dev, swap host/port for prod SMTP)
+  # ============================================================
+  mail:
+    host: ${OPENRECORDS_SMTP_HOST:localhost}
+    port: ${OPENRECORDS_SMTP_PORT:1025}
+    # MailHog needs no auth; prod will use OPENRECORDS_SMTP_USERNAME/PASSWORD env vars
+    username: ${OPENRECORDS_SMTP_USERNAME:}
+    password: ${OPENRECORDS_SMTP_PASSWORD:}
+    properties:
+      mail:
+        smtp:
+          auth: ${OPENRECORDS_SMTP_AUTH:false}
+          starttls:
+            enable: ${OPENRECORDS_SMTP_TLS:false}
+
 # ============================================================
 # SERVER
 # ============================================================
@@ -69,6 +86,15 @@ openrecords:
     refresh-token-ms: 2592000000
     # Token issuer claim
     issuer: openrecords-api
+
+  email:
+    # Sender address that appears in the From: field of all outgoing emails
+    from: ${OPENRECORDS_EMAIL_FROM:noreply@openrecords.dev}
+    # Display name shown next to the from address
+    from-name: ${OPENRECORDS_EMAIL_FROM_NAME:OpenRecords FOIA Portal}
+    # Frontend base URL used to construct verification + dashboard links in emails
+    frontend-base-url: ${OPENRECORDS_FRONTEND_URL:http://localhost:4200}
   
   tracking-number:
     prefix: FOIA
+

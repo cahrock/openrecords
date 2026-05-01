@@ -31,6 +31,15 @@ services:
       postgres:
         condition: service_healthy
 
+
+  mailhog:
+    image: mailhog/mailhog:latest
+    container_name: openrecords-mailhog
+    restart: unless-stopped
+    ports:
+      - "1025:1025"   # SMTP — Spring Boot sends mail to this port
+      - "8025:8025"   # Web UI — view captured emails at http://localhost:8025
+
 volumes:
   openrecords_postgres_data:
     name: openrecords_postgres_data

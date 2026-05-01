@@ -41,4 +41,8 @@ public class CurrentUser {
     public boolean isStaffOrAdmin() {
         return hasRole(User.Role.STAFF) || hasRole(User.Role.ADMIN);
     }
+
+    public boolean isRequester() {
+        return hasRole(User.Role.REQUESTER);
+    }
 }

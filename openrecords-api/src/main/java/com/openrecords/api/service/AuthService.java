@@ -35,17 +35,20 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
     private final VerificationTokenRepository verificationTokenRepository;
+    private final NotificationService notificationService;
 
     public AuthService(
         UserRepository userRepository,
         PasswordEncoder passwordEncoder,
         JwtService jwtService,
-        VerificationTokenRepository verificationTokenRepository
+        VerificationTokenRepository verificationTokenRepository,
+        NotificationService notificationService
     ) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtService = jwtService;
         this.verificationTokenRepository = verificationTokenRepository;
+        this.notificationService = notificationService;
     }
 
     /**
@@ -114,11 +117,13 @@ public class AuthService {
         VerificationToken token = new VerificationToken(user, tokenValue, expiresAt);
         verificationTokenRepository.save(token);
 
-        // Log the verification link (Phase 7 will send a real email)
-        String verificationLink = "http://localhost:4200/verify?token=" + tokenValue;
-        log.info("=================================================");
-        log.info("Verification link for {}: {}", normalizedEmail, verificationLink);
-        log.info("=================================================");
+        // Phase 7: real verification email. Async — the user's HTTP response
+        // returns immediately; email sending happens on a background thread.
+        notificationService.sendVerificationEmail(
+            user.getEmail(),
+            user.getFullName(),
+            tokenValue
+        );
 
         log.info("Registration success: {} ({})", user.getEmail(), user.getRole());
 
@@ -181,6 +186,9 @@ public class AuthService {
         verificationTokenRepository.save(token);
 
         log.info("Email verified: {}", user.getEmail());
+
+        // Async — fire and forget
+        notificationService.sendWelcomeEmail(user.getEmail(), user.getFullName());
 
         return new VerifyEmailResponse(
             user.getEmail(),

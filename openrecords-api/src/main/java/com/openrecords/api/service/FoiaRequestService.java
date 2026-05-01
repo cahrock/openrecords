@@ -53,6 +53,7 @@ public class FoiaRequestService {
     private final FoiaRequestMapper mapper;
     private final TrackingNumberService trackingNumberService;
     private final CurrentUser currentUser;
+    private final NotificationService notificationService;
 
     public FoiaRequestService(
         FoiaRequestRepository requestRepository,
@@ -60,7 +61,8 @@ public class FoiaRequestService {
         UserRepository userRepository,
         FoiaRequestMapper mapper,
         TrackingNumberService trackingNumberService,
-        CurrentUser currentUser
+        CurrentUser currentUser,
+        NotificationService notificationService
     ) {
         this.requestRepository = requestRepository;
         this.historyRepository = historyRepository;
@@ -68,6 +70,7 @@ public class FoiaRequestService {
         this.mapper = mapper;
         this.trackingNumberService = trackingNumberService;
         this.currentUser = currentUser;
+        this.notificationService = notificationService;
     }
 
     /**
@@ -120,14 +123,27 @@ public class FoiaRequestService {
     }
 
     /**
-     * Retrieve a single request by its id (UUID).
-     * @throws NoSuchElementException if not found — handled by global exception handler as 404
+     * Fetch a single FOIA request by ID.
+     *
+     * SECURITY: REQUESTERs may only view their own requests. Attempting to
+     * fetch someone else's request returns 404 Not Found (not 403 Forbidden) —
+     * we don't leak the existence of a request the user can't access.
      */
     public FoiaRequestDto getRequestById(UUID id) {
         FoiaRequest entity = requestRepository.findById(id)
             .orElseThrow(() -> new NoSuchElementException(
                 "FOIA request not found: " + id
             ));
+
+        // SECURITY: enforce ownership for REQUESTER role.
+        // Throw the same 404 as a non-existent UUID — no info leak.
+        if (currentUser.isRequester()
+            && !entity.getRequester().getId().equals(currentUser.get().getId())) {
+            log.info("Access denied: requester {} attempted to read request {} owned by {}",
+                currentUser.get().getId(), id, entity.getRequester().getId());
+            throw new NoSuchElementException("FOIA request not found: " + id);
+        }
+
         return mapper.toDto(entity);
     }
 
@@ -145,6 +161,11 @@ public class FoiaRequestService {
     /**
      * List requests with optional filters. All filter params are optional;
      * pass null to skip a filter dimension.
+     *
+     * SECURITY: REQUESTERs are forced to see only their own requests,
+     * regardless of any requesterId query param they pass. This is
+     * non-negotiable horizontal-privilege-escalation protection.
+     * Staff and admins see all requests subject to other filters.
      */
     public PageDto<FoiaRequestDto> listRequests(
         FoiaRequestStatus status,
@@ -155,6 +176,12 @@ public class FoiaRequestService {
         String search,
         Pageable pageable
     ) {
+        // SECURITY: Force the requesterId scope for REQUESTER role.
+        // Even if the client passes ?requesterId=99, we override it.
+        if (currentUser.isRequester()) {
+            requesterId = currentUser.get().getId();
+        }
+
         Specification<FoiaRequest> spec = Specification
             .where(FoiaRequestSpecifications.hasStatus(status))
             .and(FoiaRequestSpecifications.assignedTo(assigneeId))
@@ -210,6 +237,10 @@ public class FoiaRequestService {
         log.info("Transitioned {} from {} to {} (actor: {}, reason: {})",
             saved.getTrackingNumber(), currentStatus, newStatus,
             actor.getEmail(), reason);
+        
+        // Async — fire and forget. Notification is non-critical;
+        // failures should not affect the transition itself.
+        notificationService.sendStatusChangeEmail(saved, newStatus);
 
         return mapper.toDto(saved);
     }
