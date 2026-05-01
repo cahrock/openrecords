@@ -89,7 +89,7 @@
             [disabled]="actionState().kind === 'submitting'">
             Save
           </button>
-          @if (req.assignee?.id !== userContext.current().id) {
+          @if (req.assignee?.id !== auth.currentUser()?.id) {
           <button class="btn-secondary" type="button" (click)="assignToMe()"
             [disabled]="actionState().kind === 'submitting'">
             Assign to me

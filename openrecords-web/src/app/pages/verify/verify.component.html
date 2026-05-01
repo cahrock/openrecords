@@ -1,0 +1,58 @@
+<div class="auth-page">
+  <div class="auth-card">
+
+    @switch (state().kind) {
+
+      @case ('verifying') {
+        <div class="verify-icon">⏳</div>
+        <h1>Verifying your email…</h1>
+        <p class="muted">Just a moment.</p>
+        <div class="spinner"></div>
+      }
+
+      @case ('success') {
+        @let s = state();
+        @if (s.kind === 'success') {
+          <div class="verify-icon success">✓</div>
+          <h1>Email verified</h1>
+          <p class="muted">{{ s.message }}</p>
+          @if (s.email) {
+            <p class="muted small">
+              Account: <strong>{{ s.email }}</strong>
+            </p>
+          }
+          <a routerLink="/login" class="btn-primary btn-block">Sign in</a>
+        }
+      }
+
+      @case ('error') {
+        @let s = state();
+        @if (s.kind === 'error') {
+          <div class="verify-icon error">!</div>
+          <h1>Verification failed</h1>
+          <p class="muted">{{ s.message }}</p>
+          <p class="auth-footer">
+            <a routerLink="/register">Create a new account</a>
+            ·
+            <a routerLink="/login">Sign in</a>
+          </p>
+        }
+      }
+
+      @case ('missing-token') {
+        <div class="verify-icon error">?</div>
+        <h1>No verification token</h1>
+        <p class="muted">
+          This page expects a verification link. If you received a link
+          via email, please click it directly.
+        </p>
+        <p class="auth-footer">
+          <a routerLink="/register">Create an account</a>
+          ·
+          <a routerLink="/login">Sign in</a>
+        </p>
+      }
+    }
+
+  </div>
+</div>

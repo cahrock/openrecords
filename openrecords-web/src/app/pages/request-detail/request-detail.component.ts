@@ -10,7 +10,8 @@ import {
   TERMINAL_STATUSES,
 } from '../../models/foia-request.model';
 import { getAllowedTransitions } from '../../models/status-transitions';
-import { ASSIGNABLE_STAFF, UserContextService } from '../../services/user-context.service';
+import { AuthService } from '../../services/auth.service';
+import { ASSIGNABLE_STAFF } from '../../models/staff-list';
 
 type DetailState =
   | { kind: 'loading' }
@@ -32,7 +33,7 @@ type ActionState =
 export class RequestDetailComponent implements OnInit {
   private readonly api = inject(ApiService);
   private readonly route = inject(ActivatedRoute);
-  readonly userContext = inject(UserContextService);
+  readonly auth = inject(AuthService);
 
   readonly state = signal<DetailState>({ kind: 'loading' });
   readonly actionState = signal<ActionState>({ kind: 'idle' });
@@ -42,7 +43,7 @@ export class RequestDetailComponent implements OnInit {
   readonly transitionReason = signal<string>('');
   readonly assigneeId = signal<number | null>(null);
 
-  readonly isStaff = this.userContext.isStaff;
+  readonly isStaff = this.auth.isStaff;
   readonly assignableStaff = ASSIGNABLE_STAFF;
 
   /** Computed list of legal transitions for the current request. */
@@ -148,7 +149,9 @@ export class RequestDetailComponent implements OnInit {
 
   /** Quick-action: assign to current user (mock auth). */
   assignToMe(): void {
-    this.assigneeId.set(this.userContext.current().id);
+    const userId = this.auth.currentUser()?.id;
+    if (!userId) return;
+    this.assigneeId.set(userId);
     this.saveAssignment();
   }
 

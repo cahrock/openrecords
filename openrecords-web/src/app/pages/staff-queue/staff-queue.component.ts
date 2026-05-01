@@ -9,7 +9,7 @@ import {
   PageResponse,
   TERMINAL_STATUSES,
 } from '../../models/foia-request.model';
-import { UserContextService } from '../../services/user-context.service';
+import { AuthService } from '../../services/auth.service';
 
 type QueueState =
   | { kind: 'loading' }
@@ -37,7 +37,7 @@ const ALL_STATUSES: FoiaRequestStatus[] = [
 })
 export class StaffQueueComponent implements OnInit {
   private readonly api = inject(ApiService);
-  private readonly userContext = inject(UserContextService);
+  private readonly auth = inject(AuthService);
 
   readonly state = signal<QueueState>({ kind: 'loading' });
   readonly filters = signal<QueueFilters>({
@@ -47,7 +47,7 @@ export class StaffQueueComponent implements OnInit {
   });
 
   readonly allStatuses = ALL_STATUSES;
-  readonly currentUser = this.userContext.current;
+  readonly currentUser = this.auth.currentUser;
 
   ngOnInit(): void {
     this.load();
@@ -68,7 +68,10 @@ export class StaffQueueComponent implements OnInit {
     };
 
     if (f.status) query.status = f.status;
-    if (f.assignment === 'mine') query.assigneeId = this.currentUser().id;
+    if (f.assignment === 'mine') {
+      const userId = this.currentUser()?.id;
+      if (userId) query.assigneeId = userId;
+    }
     if (f.assignment === 'unassigned') query.unassignedOnly = true;
     if (f.search.trim()) query.search = f.search.trim();
 

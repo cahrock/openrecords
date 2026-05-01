@@ -7,6 +7,14 @@ import {
   PageResponse,
 } from '../models/foia-request.model';
 import { StatusHistoryEntry } from '../models/foia-request.model';
+import {
+  AuthResponse,
+  LoginRequest,
+  RegisterRequest,
+  RegistrationResponse,
+  VerifyEmailRequest,
+  VerifyEmailResponse,
+} from '../models/auth.model';
 
 export interface HealthResponse {
   status: string;
@@ -26,6 +34,23 @@ export interface PageQuery {
 export class ApiService {
   private readonly http = inject(HttpClient);
   private readonly baseUrl = '/api/v1';
+
+  // ============================================================
+  // Authentication endpoints
+  // ============================================================
+
+  login(request: LoginRequest): Observable<AuthResponse> {
+    return this.http.post<AuthResponse>(`${this.baseUrl}/auth/login`, request);
+  }
+
+  register(request: RegisterRequest): Observable<RegistrationResponse> {
+    return this.http.post<RegistrationResponse>(`${this.baseUrl}/auth/register`, request);
+  }
+
+  verifyEmail(token: string): Observable<VerifyEmailResponse> {
+    const request: VerifyEmailRequest = { token };
+    return this.http.post<VerifyEmailResponse>(`${this.baseUrl}/auth/verify-email`, request);
+  }
 
   // ==============================
   // Health

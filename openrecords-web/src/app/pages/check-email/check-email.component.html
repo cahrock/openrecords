@@ -1,0 +1,31 @@
+<div class="auth-page">
+  <div class="auth-card">
+    <div class="check-email-icon">📬</div>
+
+    <h1>Check your email</h1>
+
+    @if (email) {
+      <p class="muted">
+        We've sent a verification link to <strong>{{ email }}</strong>.
+        Click the link to activate your account.
+      </p>
+    } @else {
+      <p class="muted">
+        We've sent a verification link to your email address.
+        Click the link to activate your account.
+      </p>
+    }
+
+    <div class="dev-note">
+      <strong>Development mode:</strong>
+      <p>
+        Email sending is not yet wired (Phase 7).
+        Check the Spring Boot console logs for your verification link.
+      </p>
+    </div>
+
+    <p class="auth-footer">
+      <a routerLink="/login">Back to sign in</a>
+    </p>
+  </div>
+</div>

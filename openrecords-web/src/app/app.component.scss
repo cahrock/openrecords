@@ -1,34 +1,26 @@
 :host {
-  display: block;
-  min-height: 100vh;
-  background: #f6f8fa;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
-  color: #1f2937;
-}
-
-.app-shell {
-  min-height: 100vh;
   display: flex;
   flex-direction: column;
+  min-height: 100vh;
 }
 
-// ======================
-// Top navigation bar
-// ======================
-.nav {
+.app-header {
   background: white;
   border-bottom: 1px solid #e5e7eb;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+  position: sticky;
+  top: 0;
+  z-index: 50;
 }
 
-.nav-inner {
-  max-width: 1100px;
+.header-inner {
+  max-width: 1200px;
   margin: 0 auto;
-  padding: 1rem 1.5rem;
+  padding: 0.85rem 1.5rem;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 1rem;
+  gap: 1.5rem;
+  flex-wrap: wrap;
 }
 
 .brand {
@@ -36,126 +28,215 @@
   align-items: center;
   gap: 0.75rem;
   text-decoration: none;
-  color: inherit;
+  color: #1f2937;
 
-  &:hover { opacity: 0.85; }
-}
+  .brand-mark {
+    width: 2.5rem;
+    height: 2.5rem;
+    background: #1e3a8a;
+    color: white;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    font-size: 0.9rem;
+    letter-spacing: 0.05em;
+  }
 
-.brand-logo {
-  width: 40px;
-  height: 40px;
-  border-radius: 8px;
-  background: linear-gradient(135deg, #1e3a8a, #2563eb);
-  color: white;
-  display: grid;
-  place-items: center;
-  font-weight: 700;
-  font-size: 1rem;
-  letter-spacing: 0.02em;
-}
+  .brand-text {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.1;
 
-.brand-text {
-  display: flex;
-  flex-direction: column;
-  line-height: 1.15;
-}
+    strong {
+      font-size: 1.1rem;
+      color: #1f2937;
+    }
 
-.brand-name {
-  font-size: 1.15rem;
-  font-weight: 700;
-  color: #1e3a8a;
-}
-
-.brand-sub {
-  font-size: 0.78rem;
-  color: #6b7280;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
+    span {
+      font-size: 0.7rem;
+      color: #6b7280;
+      letter-spacing: 0.05em;
+    }
+  }
 }
 
 .nav-links {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.75rem;
+  flex-wrap: wrap;
 
   a {
-    padding: 0.5rem 1rem;
-    border-radius: 6px;
-    text-decoration: none;
     color: #4b5563;
-    font-size: 0.95rem;
+    text-decoration: none;
     font-weight: 500;
-    transition: background-color 0.15s, color 0.15s;
+    padding: 0.45rem 0.85rem;
+    border-radius: 6px;
+    font-size: 0.95rem;
+    transition: background 0.1s, color 0.1s;
 
-    &:hover {
-      background: #f3f4f6;
-      color: #1f2937;
-    }
+    &:hover { background: #f3f4f6; color: #1f2937; }
 
-    &.active {
-      background: #eff6ff;
-      color: #1e3a8a;
-    }
+    &.active { background: #eff6ff; color: #1e3a8a; }
   }
 
-  .nav-cta {
+  a.nav-cta {
     background: #1e3a8a;
-    color: white !important;
+    color: white;
 
-    &:hover {
-      background: #1e40af;
-    }
-
-    &.active {
-      background: #1e40af;
-      color: white !important;
-    }
+    &:hover { background: #1e40af; }
+    &.active { background: #1e40af; }
   }
 }
 
-// ======================
-// Status stripe
-// ======================
-.status-stripe {
-  max-width: 1100px;
-  margin: 0 auto;
-  padding: 0.5rem 1.5rem;
-  font-size: 0.85rem;
-  color: #6b7280;
+// ============================================================
+// User menu (replaces persona switcher)
+// ============================================================
+.user-menu {
+  position: relative;
+}
+
+.user-trigger {
   display: flex;
   align-items: center;
   gap: 0.6rem;
+  padding: 0.35rem 0.6rem 0.35rem 0.35rem;
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 999px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: border-color 0.15s, background 0.15s;
 
-  .dot {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    background: #9ca3af;
-  }
-
-  &[data-state='ok'] .dot {
-    background: #10b981;
-    box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.18);
-  }
-
-  &[data-state='error'] {
-    color: #b91c1c;
-
-    .dot {
-      background: #ef4444;
-      box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.2);
-    }
+  &:hover {
+    border-color: #1e3a8a;
+    background: #f8fafc;
   }
 }
 
-// ======================
-// Routed page content
-// ======================
-.content {
-  flex: 1;
-  max-width: 1100px;
+.avatar {
+  width: 2rem;
+  height: 2rem;
+  border-radius: 50%;
+  background: #1e3a8a;
+  color: white;
+  font-weight: 700;
+  font-size: 0.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.user-info {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  line-height: 1.1;
+}
+
+.user-name {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.user-role {
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+
+  &[data-role='REQUESTER'] { color: #1e40af; }
+  &[data-role='STAFF']     { color: #5b21b6; }
+  &[data-role='ADMIN']     { color: #991b1b; }
+}
+
+.caret {
+  color: #6b7280;
+  font-size: 0.7rem;
+  transition: transform 0.15s;
+}
+
+.user-menu.open .caret { transform: rotate(180deg); }
+
+.user-dropdown {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 0.5rem);
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+  min-width: 240px;
+  z-index: 100;
+  overflow: hidden;
+}
+
+.dropdown-header {
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid #f3f4f6;
+  display: flex;
+  flex-direction: column;
+  line-height: 1.3;
+
+  strong {
+    color: #1f2937;
+    font-size: 0.9rem;
+  }
+
+  .muted {
+    color: #6b7280;
+    font-size: 0.8rem;
+    font-family: 'Consolas', 'Monaco', monospace;
+  }
+}
+
+.dropdown-item {
+  display: block;
   width: 100%;
+  padding: 0.65rem 1rem;
+  border: none;
+  background: white;
+  text-align: left;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 0.9rem;
+  transition: background 0.1s;
+
+  &:hover { background: #f9fafb; }
+
+  &.danger {
+    color: #b91c1c;
+    &:hover { background: #fef2f2; }
+  }
+}
+
+// ============================================================
+// Health strip
+// ============================================================
+.health-strip {
+  max-width: 1200px;
   margin: 0 auto;
-  padding: 2rem 1.5rem;
-  box-sizing: border-box;
+  padding: 0.4rem 1.5rem;
+  font-size: 0.75rem;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  border-top: 1px solid #f3f4f6;
+}
+
+.health-ok { color: #10b981; }
+.health-error { color: #ef4444; }
+.health-loading { color: #f59e0b; }
+
+.muted { color: #6b7280; }
+
+// ============================================================
+// Main content area
+// ============================================================
+.app-main {
+  flex: 1;
+  background: #f8fafc;
 }

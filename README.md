@@ -14,6 +14,17 @@ A working two-sided portal with end-to-end data flow:
 
 **Database** — Schema managed via Flyway migrations (V1–V4), enforced state-machine via CHECK constraints, partial indexes for staff queue queries.
 
+## Screenshots
+
+### Citizen portal
+![My Requests](docs/screenshots/my-requests.png)
+
+### Staff queue with filters
+![Staff queue](docs/screenshots/staff-queue.png)
+
+### Detail page with staff actions and audit trail
+![Request detail](docs/screenshots/request-detail-staff.png)
+
 ## Architecture Highlights
 
 - **State-machine domain model** — `FoiaRequestStatus` with allowed-transition rules enforced in service layer; invalid transitions return HTTP 422 with structured error.

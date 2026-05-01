@@ -1,56 +1,93 @@
-<div class="app-shell">
+<header class="app-header">
+  <div class="header-inner">
 
-  <!-- Top navigation bar -->
-  <header class="nav">
-    <div class="nav-inner">
-      <a routerLink="/" class="brand">
-        <span class="brand-logo">OR</span>
-        <span class="brand-text">
-          <span class="brand-name">OpenRecords</span>
-          <span class="brand-sub">FOIA Portal</span>
-        </span>
-      </a>
+    <a routerLink="/requests" class="brand">
+      <div class="brand-mark">OR</div>
+      <div class="brand-text">
+        <strong>OpenRecords</strong>
+        <span>FOIA Portal</span>
+      </div>
+    </a>
 
-      <nav class="nav-links">
-        <app-persona-switcher />
+    <nav class="nav-links">
 
-        @if (isStaff()) {
+      @if (auth.isAuthenticated()) {
+
+        @if (auth.isStaff()) {
           <a routerLink="/staff/queue" routerLinkActive="active">Queue</a>
         }
 
-        <a routerLink="/requests" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">
+        <a
+          routerLink="/requests"
+          routerLinkActive="active"
+          [routerLinkActiveOptions]="{ exact: true }"
+        >
           My Requests
         </a>
+
         <a routerLink="/requests/new" routerLinkActive="active" class="nav-cta">
           + New Request
         </a>
-      </nav>
-    </div>
+        
+        <div class="user-menu" [class.open]="menuOpen()">
+          <button class="user-trigger" (click)="toggleMenu()" type="button">
+            <span class="avatar">{{ getInitials() }}</span>
+            <span class="user-info">
+              <span class="user-name">{{ auth.currentUser()?.fullName }}</span>
+              <span class="user-role" [attr.data-role]="auth.currentRole()">
+                {{ auth.currentRole() }}
+              </span>
+            </span>
+            <span class="caret">▾</span>
+          </button>
 
-    <!-- Backend status stripe -->
-    <div class="status-stripe" [attr.data-state]="health().kind">
-      @if (health().kind === 'loading') {
-        <span class="dot"></span>
-        <span>Connecting to API…</span>
-      } @else if (health().kind === 'ok') {
-        @let h = health();
-        @if (h.kind === 'ok') {
-          <span class="dot"></span>
-          <span>API connected · {{ h.data.service }}</span>
+          @if (menuOpen()) {
+            <div class="user-dropdown">
+              <div class="dropdown-header">
+                <strong>{{ auth.currentUser()?.fullName }}</strong>
+                <span class="muted">{{ auth.currentUser()?.email }}</span>
+              </div>
+              <button class="dropdown-item danger" type="button" (click)="signOut()">
+                Sign out
+              </button>
+            </div>
+          }
+        </div>
+
+      } @else {
+
+        <a routerLink="/login" routerLinkActive="active">Sign in</a>
+        <a routerLink="/register" routerLinkActive="active" class="nav-cta">
+          Create account
+        </a>
+
+      }
+    </nav>
+  </div>
+
+  @if (auth.isAuthenticated()) {
+    <div class="health-strip">
+      @switch (health().kind) {
+        @case ('ok') {
+          <span class="health-ok">●</span>
+          <span class="muted">API connected · openrecords-api</span>
         }
-      } @else if (health().kind === 'error') {
-        @let h = health();
-        @if (h.kind === 'error') {
-          <span class="dot"></span>
-          <span>API unreachable — check Spring Boot on :8080</span>
+        @case ('error') {
+          <span class="health-error">●</span>
+          @let h = health();
+          @if (h.kind === 'error') {
+            <span class="muted">API unreachable: {{ h.message }}</span>
+          }
+        }
+        @case ('loading') {
+          <span class="health-loading">●</span>
+          <span class="muted">Checking API…</span>
         }
       }
     </div>
-  </header>
+  }
+</header>
 
-  <!-- Main content: whichever page the router matches -->
-  <main class="content">
-    <router-outlet />
-  </main>
-
-</div>
+<main class="app-main">
+  <router-outlet />
+</main>

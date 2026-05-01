@@ -1,0 +1,93 @@
+<div class="auth-page">
+  <div class="auth-card">
+    <header class="auth-header">
+      <h1>Create your account</h1>
+      <p class="muted">File FOIA requests through OpenRecords.</p>
+    </header>
+
+    <form [formGroup]="form" (ngSubmit)="submit()" class="auth-form">
+
+      @if (submitState().kind === 'error') {
+        @let s = submitState();
+        @if (s.kind === 'error') {
+          <div class="auth-error">
+            <strong>Registration failed</strong>
+            <p>{{ s.message }}</p>
+          </div>
+        }
+      }
+
+      <div class="form-field">
+        <label for="fullName">Full name</label>
+        <input
+          id="fullName"
+          type="text"
+          formControlName="fullName"
+          autocomplete="name"
+          [class.invalid]="fieldHasError('fullName')"
+        />
+        @if (fieldHasError('fullName')) {
+          <span class="field-error">Full name is required.</span>
+        }
+      </div>
+
+      <div class="form-field">
+        <label for="email">Email</label>
+        <input
+          id="email"
+          type="email"
+          formControlName="email"
+          autocomplete="email"
+          [class.invalid]="fieldHasError('email')"
+        />
+        @if (fieldHasError('email')) {
+          <span class="field-error">
+            @if (form.controls.email.errors?.['required']) {
+              Email is required.
+            } @else if (form.controls.email.errors?.['email']) {
+              Please enter a valid email address.
+            } @else if (form.controls.email.errors?.['maxlength']) {
+              Email must be 254 characters or fewer.
+            }
+          </span>
+        }
+      </div>
+
+      <div class="form-field">
+        <label for="password">Password</label>
+        <input
+          id="password"
+          type="password"
+          formControlName="password"
+          autocomplete="new-password"
+          [class.invalid]="fieldHasError('password')"
+        />
+
+        <ul class="password-checks">
+          @let checks = passwordChecks();
+          <li [class.met]="checks.length">8–100 characters</li>
+          <li [class.met]="checks.uppercase">At least one uppercase letter</li>
+          <li [class.met]="checks.lowercase">At least one lowercase letter</li>
+          <li [class.met]="checks.digit">At least one digit</li>
+        </ul>
+      </div>
+
+      <button
+        type="submit"
+        class="btn-primary btn-block"
+        [disabled]="submitState().kind === 'submitting'"
+      >
+        @if (submitState().kind === 'submitting') {
+          Creating account…
+        } @else {
+          Create account
+        }
+      </button>
+
+      <p class="auth-footer">
+        Already have an account?
+        <a routerLink="/login">Sign in</a>
+      </p>
+    </form>
+  </div>
+</div>
