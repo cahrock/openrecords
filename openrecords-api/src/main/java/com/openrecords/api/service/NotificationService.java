@@ -14,6 +14,8 @@ import org.springframework.stereotype.Service;
 
 import com.openrecords.api.domain.FoiaRequest;
 import com.openrecords.api.domain.FoiaRequestStatus;
+import org.thymeleaf.TemplateEngine;
+import org.thymeleaf.context.Context;
 
 import java.io.UnsupportedEncodingException;
 import java.nio.charset.StandardCharsets;
@@ -36,10 +38,16 @@ public class NotificationService {
 
     private final JavaMailSender mailSender;
     private final EmailProperties props;
+    private final TemplateEngine templateEngine;
 
-    public NotificationService(JavaMailSender mailSender, EmailProperties props) {
+    public NotificationService(
+        JavaMailSender mailSender,
+        EmailProperties props,
+        TemplateEngine templateEngine
+    ) {
         this.mailSender = mailSender;
         this.props = props;
+        this.templateEngine = templateEngine;
     }
 
     /**
@@ -88,11 +96,15 @@ public class NotificationService {
     public void sendVerificationEmail(String toAddress, String fullName, String verificationToken) {
         String verificationLink = props.getFrontendBaseUrl() + "/verify?token=" + verificationToken;
 
-        String subject = "Verify your OpenRecords account";
-        String body = buildVerificationBody(fullName, verificationLink);
+        Context ctx = new Context();
+        ctx.setVariable("fullName", fullName);
+        ctx.setVariable("verificationLink", verificationLink);
+        ctx.setVariable("frontendBaseUrl", props.getFrontendBaseUrl());
+
+        String body = templateEngine.process("email/verification", ctx);
 
         log.info("Sending verification email to {}", toAddress);
-        sendHtmlEmail(toAddress, subject, body);
+        sendHtmlEmail(toAddress, "Verify your OpenRecords account", body);
     }
 
     /**
@@ -102,82 +114,16 @@ public class NotificationService {
     @Async("emailExecutor")
     public void sendWelcomeEmail(String toAddress, String fullName) {
         String loginLink = props.getFrontendBaseUrl() + "/login";
-        String subject = "Welcome to OpenRecords";
-        String body = buildWelcomeBody(fullName, loginLink);
+
+        Context ctx = new Context();
+        ctx.setVariable("fullName", fullName);
+        ctx.setVariable("loginLink", loginLink);
+        ctx.setVariable("frontendBaseUrl", props.getFrontendBaseUrl());
+
+        String body = templateEngine.process("email/welcome", ctx);
 
         log.info("Sending welcome email to {}", toAddress);
-        sendHtmlEmail(toAddress, subject, body);
-    }
-
-    private String buildWelcomeBody(String fullName, String loginLink) {
-        return """
-            <!DOCTYPE html>
-            <html>
-            <body style="font-family: -apple-system, 'Segoe UI', Roboto, sans-serif; \
-                         max-width: 560px; margin: 0 auto; padding: 24px; color: #1f2937;">
-              <div style="background: #1e3a8a; color: white; padding: 16px 20px; \
-                          border-radius: 8px 8px 0 0;">
-                <h1 style="margin: 0; font-size: 20px;">OpenRecords FOIA Portal</h1>
-              </div>
-              <div style="background: white; padding: 24px 20px; border: 1px solid #e5e7eb; \
-                          border-top: none; border-radius: 0 0 8px 8px;">
-                <h2 style="font-size: 18px; margin-top: 0;">Welcome aboard, %s</h2>
-                <p>Your email is verified and your account is active.</p>
-                <p>OpenRecords lets you file Freedom of Information Act (FOIA) requests \
-                   to federal agencies, track their progress through the review workflow, \
-                   and download released documents — all in one place.</p>
-                <p style="text-align: center; margin: 32px 0;">
-                  <a href="%s" \
-                     style="background: #1e3a8a; color: white; padding: 12px 24px; \
-                            text-decoration: none; border-radius: 6px; \
-                            display: inline-block; font-weight: 600;">
-                    Sign in to get started
-                  </a>
-                </p>
-                <p style="font-size: 14px; color: #6b7280; margin-top: 32px;">
-                  Questions? Reply to this email or reach our support team.
-                </p>
-              </div>
-            </body>
-            </html>
-            """.formatted(fullName, loginLink);
-    }
-
-    private String buildVerificationBody(String fullName, String verificationLink) {
-        return """
-            <!DOCTYPE html>
-            <html>
-            <body style="font-family: -apple-system, 'Segoe UI', Roboto, sans-serif; \
-                         max-width: 560px; margin: 0 auto; padding: 24px; color: #1f2937;">
-              <div style="background: #1e3a8a; color: white; padding: 16px 20px; \
-                          border-radius: 8px 8px 0 0;">
-                <h1 style="margin: 0; font-size: 20px;">OpenRecords FOIA Portal</h1>
-              </div>
-              <div style="background: white; padding: 24px 20px; border: 1px solid #e5e7eb; \
-                          border-top: none; border-radius: 0 0 8px 8px;">
-                <h2 style="font-size: 18px; margin-top: 0;">Welcome, %s</h2>
-                <p>Thanks for creating an OpenRecords account. To activate it, \
-                   verify your email address by clicking the button below.</p>
-                <p style="text-align: center; margin: 32px 0;">
-                  <a href="%s" \
-                     style="background: #1e3a8a; color: white; padding: 12px 24px; \
-                            text-decoration: none; border-radius: 6px; \
-                            display: inline-block; font-weight: 600;">
-                    Verify email address
-                  </a>
-                </p>
-                <p style="font-size: 14px; color: #6b7280;">
-                  Or paste this link into your browser:<br>
-                  <a href="%s" style="color: #1e3a8a; word-break: break-all;">%s</a>
-                </p>
-                <p style="font-size: 14px; color: #6b7280; margin-top: 32px;">
-                  This link expires in 24 hours. If you didn't create an account, \
-                  you can safely ignore this email.
-                </p>
-              </div>
-            </body>
-            </html>
-            """.formatted(fullName, verificationLink, verificationLink, verificationLink);
+        sendHtmlEmail(toAddress, "Welcome to OpenRecords", body);
     }
 
     /**
@@ -188,7 +134,6 @@ public class NotificationService {
     public void sendStatusChangeEmail(FoiaRequest request, FoiaRequestStatus newStatus) {
         StatusEmailContent content = contentFor(newStatus);
         if (content == null) {
-            // This transition doesn't warrant a user email. Silent skip.
             return;
         }
 
@@ -196,13 +141,16 @@ public class NotificationService {
         String requesterName = request.getRequester().getFullName();
         String detailLink = props.getFrontendBaseUrl() + "/requests/" + request.getId();
 
-        String body = buildStatusChangeBody(
-            requesterName,
-            request.getTrackingNumber(),
-            request.getSubject(),
-            content,
-            detailLink
-        );
+        Context ctx = new Context();
+        ctx.setVariable("requesterName", requesterName);
+        ctx.setVariable("headline", content.headline());
+        ctx.setVariable("detail", content.detail());
+        ctx.setVariable("trackingNumber", request.getTrackingNumber());
+        ctx.setVariable("requestSubject", request.getSubject());
+        ctx.setVariable("detailLink", detailLink);
+        ctx.setVariable("frontendBaseUrl", props.getFrontendBaseUrl());
+
+        String body = templateEngine.process("email/status-change", ctx);
 
         log.info("Sending {} status notification for {} to {}",
             newStatus, request.getTrackingNumber(), to);
@@ -260,59 +208,4 @@ public class NotificationService {
         String detail
     ) {}
 
-    private String buildStatusChangeBody(
-        String requesterName,
-        String trackingNumber,
-        String requestSubject,
-        StatusEmailContent content,
-        String detailLink
-    ) {
-        return """
-            <!DOCTYPE html>
-            <html>
-            <body style="font-family: -apple-system, 'Segoe UI', Roboto, sans-serif; \
-                         max-width: 560px; margin: 0 auto; padding: 24px; color: #1f2937;">
-              <div style="background: #1e3a8a; color: white; padding: 16px 20px; \
-                          border-radius: 8px 8px 0 0;">
-                <h1 style="margin: 0; font-size: 20px;">OpenRecords FOIA Portal</h1>
-              </div>
-              <div style="background: white; padding: 24px 20px; border: 1px solid #e5e7eb; \
-                          border-top: none; border-radius: 0 0 8px 8px;">
-                <h2 style="font-size: 18px; margin-top: 0;">Hi %s,</h2>
-                <p style="font-size: 16px;"><strong>%s</strong></p>
-                <p>%s</p>
-                <div style="background: #f9fafb; border-left: 4px solid #1e3a8a; \
-                            padding: 12px 16px; margin: 24px 0; border-radius: 4px;">
-                  <div style="font-size: 12px; color: #6b7280; text-transform: uppercase; \
-                              letter-spacing: 0.05em;">Request</div>
-                  <div style="font-family: 'Consolas', 'Monaco', monospace; \
-                              font-size: 14px; font-weight: 600; margin-top: 2px;">%s</div>
-                  <div style="font-size: 14px; color: #4b5563; margin-top: 4px;">%s</div>
-                </div>
-                <p style="text-align: center; margin: 32px 0;">
-                  <a href="%s" \
-                     style="background: #1e3a8a; color: white; padding: 12px 24px; \
-                            text-decoration: none; border-radius: 6px; \
-                            display: inline-block; font-weight: 600;">
-                    View request details
-                  </a>
-                </p>
-                <p style="font-size: 14px; color: #6b7280;">
-                  Or paste this link into your browser:<br>
-                  <a href="%s" style="color: #1e3a8a; word-break: break-all;">%s</a>
-                </p>
-              </div>
-            </body>
-            </html>
-            """.formatted(
-                requesterName,
-                content.headline(),
-                content.detail(),
-                trackingNumber,
-                requestSubject,
-                detailLink,
-                detailLink,
-                detailLink
-            );
-    }
 }

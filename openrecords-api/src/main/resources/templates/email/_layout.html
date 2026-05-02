@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+
+<!-- Email header — included via th:replace="~{email/_layout :: header}" -->
+<div th:fragment="header" style="background: #1e3a8a; color: white; padding: 16px 20px; border-radius: 8px 8px 0 0;">
+  <h1 style="margin: 0; font-size: 20px;">OpenRecords FOIA Portal</h1>
+</div>
+
+<!-- Email footer — included via th:replace="~{email/_layout :: footer}" -->
+<div th:fragment="footer" style="font-size: 12px; color: #9ca3af; text-align: center; margin-top: 16px;">
+  <p style="margin: 0;">© OpenRecords FOIA Portal</p>
+  <p style="margin: 4px 0 0;">
+    Manage your account at
+    <a th:href="${frontendBaseUrl}" th:text="${frontendBaseUrl}"
+       style="color: #6b7280; text-decoration: none;"></a>
+  </p>
+</div>
+
+</body>
+</html>
