@@ -8,15 +8,17 @@ Submitted as a portfolio project for federal full-stack developer roles emphasiz
 
 A working two-sided portal with end-to-end data flow:
 
-**Authentication** — JWT-based authentication with bcrypt password hashing (cost factor 12), email verification flow with one-time tokens, refresh tokens for session continuity, and route guards enforcing role-based access.
+**Authentication** — JWT-based authentication with bcrypt password hashing (cost factor 12), email verification flow with one-time tokens, refresh tokens for session continuity, and route guards enforcing role-based access. Server-side authorization scopes prevent horizontal privilege escalation — REQUESTERs can only see and access their own filings.
 
-**Citizen portal** — file FOIA requests, track status across an 11-state workflow (DRAFT → SUBMITTED → ACKNOWLEDGED → ASSIGNED → UNDER_REVIEW → ... → CLOSED), and view request details.
+**Email notifications** — Async email dispatch via Spring Mail with a dedicated thread pool. HTML emails rendered from Thymeleaf templates with shared header/footer fragments. MailHog runs in Docker for development; SMTP host swappable via env vars for production. Currently sends three email types: account verification, welcome, and status change notifications (six workflow transitions).
+
+**Citizen portal** — register an account, verify email, file FOIA requests, track status across an 11-state workflow (DRAFT → SUBMITTED → ACKNOWLEDGED → ASSIGNED → UNDER_REVIEW → ... → CLOSED), and view request details with full audit history.
+
+**Staff console** — role-aware queue with multi-filter triage (status, assignment, search), action panel for assigning requests and transitioning statuses, with live audit trail showing every change.
 
 **Backend API** — RESTful endpoints with RFC 7807 ProblemDetail error responses, JPA Specifications for filtered queries, optimistic locking, audit-trail history, and 20-business-day SLA due-date calculation.
 
-**Database** — Schema managed via Flyway migrations (V1–V4), enforced state-machine via CHECK constraints, partial indexes for staff queue queries.
-
-
+**Database** — Schema managed via Flyway migrations (V1–V6), enforced state-machine via CHECK constraints, partial indexes for staff queue queries.
 
 ## Screenshots
 
@@ -41,6 +43,8 @@ A working two-sided portal with end-to-end data flow:
 - **JWT authentication with refresh tokens** — access tokens (15 min) for API requests; refresh tokens (30 days) stored in `refresh_tokens` table for revocability. Authorization header injection handled by HTTP interceptor.
 - **Bcrypt password hashing** — cost factor 12 (~300ms per hash) defeats brute-force attacks. Generic "invalid credentials" error message prevents account enumeration.
 - **Email verification flow** — single-use tokens with 24-hour expiration. Idempotent verification handles duplicate clicks gracefully.
+- **Async email pipeline** — `@Async` thread pool isolates SMTP latency from request threads. Email sending failures are logged but never block user actions. Templates use Thymeleaf with shared layout fragments for consistency across all email types.
+- **Defense-in-depth authorization** — REQUESTER role scoping is enforced at the service layer, not the controller. Query parameters can't bypass it. Detail endpoints return 404 (not 403) on unauthorized access to avoid leaking the existence of resources.
 - **Route guards with redirect preservation** — unauthenticated users requesting `/staff/queue` are redirected to login, then routed back to their original destination after sign-in.
 - **State-machine domain model** — `FoiaRequestStatus` with allowed-transition rules enforced in service layer; invalid transitions return HTTP 422 with structured error.
 - **Audit trail** — every status change writes a `foia_request_status_history` row in the same transaction as the status update, ensuring consistency.
@@ -87,6 +91,14 @@ cd openrecords-api
 cd openrecords-web
 npm start                  # http://localhost:4200
 ```
+
+### MailHog (development email)
+
+Outgoing emails are captured by MailHog (dev SMTP server). View them at:
+- **MailHog UI:** http://localhost:8025
+- **SMTP listener:** localhost:1025
+
+No real emails are sent in development. To swap to a real SMTP provider in production, override `OPENRECORDS_SMTP_HOST`, `OPENRECORDS_SMTP_PORT`, `OPENRECORDS_SMTP_USERNAME`, `OPENRECORDS_SMTP_PASSWORD`, and `OPENRECORDS_SMTP_AUTH` environment variables.
 
 ### Demo data
 
@@ -147,7 +159,7 @@ Rotate passwords on a regular schedule.
 | Phase 4b: Angular UI | ✅ Done | Form, list, and detail pages |
 | Phase 5: Staff console | ✅ Done | State machine, assignment, SLA, queue filtering, audit timeline |
 | Phase 6: Authentication | ✅ Done | JWT, bcrypt, registration, email verification, route guards |
-| Phase 7: Notifications | Planned | Email triggers (Spring Mail + Thymeleaf + MailHog) |
+| Phase 7: Notifications | ✅ Done | Async email pipeline, Thymeleaf templates, MailHog (dev) |
 | Phase 8: Deployment | Planned | AWS ECS + RDS + S3, HttpOnly cookies, silent token refresh |
 
 ## License
