@@ -1,5 +1,7 @@
 # OpenRecords
 
+> A fullstack portfolio project by **CahRock** — Federal FOIA Request Management Portal demonstrating Angular 18, Spring Boot, JWT authentication, async email, and AWS deployment.
+
 A FOIA (Freedom of Information Act) Request Management Portal demonstrating modern federal-grade full-stack development.
 
 Submitted as a portfolio project for federal full-stack developer roles emphasizing Angular, Java, RESTful microservices, AWS readiness, and Section 508 accessibility.
@@ -161,6 +163,20 @@ Rotate passwords on a regular schedule.
 | Phase 6: Authentication | ✅ Done | JWT, bcrypt, registration, email verification, route guards |
 | Phase 7: Notifications | ✅ Done | Async email pipeline, Thymeleaf templates, MailHog (dev) |
 | Phase 8: Deployment | Planned | AWS ECS + RDS + S3, HttpOnly cookies, silent token refresh |
+
+## Screenshots
+
+### Authentication
+![Login page](docs/screenshots/login-page.png)
+![Registration form with live password complexity feedback](docs/screenshots/register-page.png)
+
+### Email Notifications
+![MailHog inbox showing the three email types](docs/screenshots/mailhog-inbox.png)
+![Verification email rendered HTML](docs/screenshots/email-verification.png)
+![Status change email with embedded request card](docs/screenshots/email-status-change.png)
+
+### Staff Console
+![Request detail with staff actions and audit trail](docs/screenshots/request-detail-staff.png)
 
 ## License
 
