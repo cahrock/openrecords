@@ -1,6 +1,10 @@
 # OpenRecords
 
-> A fullstack portfolio project by **CahRock** — Federal FOIA Request Management Portal demonstrating Angular 18, Spring Boot, JWT authentication, async email, and AWS deployment.
+> A fullstack portfolio project by **Arif Mustofa** — FOIA Request
+> Management Portal demonstrating Angular 18, Spring Boot 3, JWT
+> authentication, async email, and AWS deployment.
+>
+> [a.mustofa@gmail.com](mailto:a.mustofa@gmail.com) · [LinkedIn](https://linkedin.com/in/...)
 
 A FOIA (Freedom of Information Act) Request Management Portal demonstrating modern federal-grade full-stack development.
 
